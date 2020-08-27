@@ -23,6 +23,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class ClientConnectionMgr extends AbstractChannelPoolMap<InetSocketAddress, FixedChannelPool>  implements
         ConnectionMgr, ReconnectMgr {
     private static final int MAX_CONNS = 1;
+    private static final int TRTRY_COUNT = 3;
 
     private ChannelPoolHandler channelPoolHandler;
     private Bootstrap bootstrap;
@@ -143,7 +144,7 @@ public class ClientConnectionMgr extends AbstractChannelPoolMap<InetSocketAddres
             reconnectCount.getAndIncrement();
         }
 
-        protected int getCount() {
+        public int getCount() {
             return reconnectCount.get();
         }
 

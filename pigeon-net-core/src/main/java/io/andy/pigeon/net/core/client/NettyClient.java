@@ -8,11 +8,11 @@ import lombok.extern.slf4j.Slf4j;
 public class NettyClient extends AbstractClientEndpoint {
 
     public void oneWay(final Connection conn, final Object request) {
-        msgEmitter.oneWay(conn, request);
+        sendOneWayMsg(conn, request);
     }
 
     public void oneWay(final Url url, final Object request) {
-        msgEmitter.oneWay(url, request);
+        sendOneWayMsg(url, request);
     }
 
 

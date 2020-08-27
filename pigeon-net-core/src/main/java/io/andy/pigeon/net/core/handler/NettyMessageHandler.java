@@ -93,7 +93,16 @@ public class NettyMessageHandler extends SimpleChannelInboundHandler<Envelope> {
                 log.error("[BUG]connection is null when handle user IdleStateEvent event!");
                 return;
             }
-            eventDispatcher.dispatch(ctx);
+
+            /**
+             *  链接活跃的情况下才分发事件
+             */
+            if (ctx.channel().isActive()) {
+                eventDispatcher.dispatch(ctx);
+            } else {
+                ClientConnectionMgr clientConnectionMgr = (ClientConnectionMgr) connectionMgr;
+                clientConnectionMgr.reconnect(connection.getUrl());
+            }
         }
     }
 
@@ -102,6 +111,7 @@ public class NettyMessageHandler extends SimpleChannelInboundHandler<Envelope> {
             ClientConnectionMgr clientConnectionMgr = (ClientConnectionMgr) connectionMgr;
             ConnectionEvent eventType = (ConnectionEvent) evt;
             Connection connection = ctx.channel().attr(Connection.CONNECTION).get();
+
             if (connection == null) {
                 log.error("[BUG]connection is null when handle connection event!");
                 return;

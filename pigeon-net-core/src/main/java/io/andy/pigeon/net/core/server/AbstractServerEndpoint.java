@@ -6,11 +6,9 @@ import io.andy.pigeon.net.core.codec.message.MsgCodecFactory;
 import io.andy.pigeon.net.core.codec.NettyDecoder;
 import io.andy.pigeon.net.core.codec.NettyEncoder;
 import io.andy.pigeon.net.core.config.*;
-import io.andy.pigeon.net.core.connection.ConnectionMgr;
 import io.andy.pigeon.net.core.connection.ServerConnectionMgr;
 import io.andy.pigeon.net.core.constant.Constants;
 import io.andy.pigeon.net.core.handler.NettyMessageHandler;
-import io.andy.pigeon.net.core.message.emitter.ServerMsgEmitter;
 import io.andy.pigeon.net.core.utils.NamedThreadFactory;
 import io.andy.pigeon.net.core.utils.NettyEventLoopUtil;
 import io.netty.bootstrap.ServerBootstrap;
@@ -27,9 +25,6 @@ public abstract class AbstractServerEndpoint extends AbstractRemotingEndpoint {
     /** message codec factory */
     private MsgCodecFactory             codecFactory;
 
-    /** server message emitter */
-    protected ServerMsgEmitter msgTransmitter;
-
     /** server bootstrap */
     private ServerBootstrap             bootstrap;
 
@@ -45,15 +40,10 @@ public abstract class AbstractServerEndpoint extends AbstractRemotingEndpoint {
             Runtime.getRuntime().availableProcessors() * 2,
             new NamedThreadFactory("netty-server-worker", true));
 
-    /** connection manager */
-    private ConnectionMgr               connectionMgr;
-
     @Override
     public void start()  {
         this.codecFactory = new DefaultMsgCodecFactory();
         this.connectionMgr = new ServerConnectionMgr();
-        this.msgTransmitter = new ServerMsgEmitter(connectionMgr);
-
 
         startup();
 
