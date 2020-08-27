@@ -25,17 +25,24 @@ public class ServerConnectionMgr implements ConnectionMgr {
     }
 
     @Override
-    public void remove(Connection connection) {
-        if (null == connection) {
+    public void add(Channel channel, Url url) {
+        if (null == channel || url == null) {
             return;
         }
 
-        connectionMap.remove(connection.getChannel());
+        connectionMap.putIfAbsent(channel, new Connection(channel, url));
     }
 
     @Override
-    public Connection get(String key) {
-        return connectionMap.get(key);
+    public void removeIfDisconnected(Channel channel) {
+        if (channel != null && !channel.isActive()) {
+            connectionMap.remove(channel);
+        }
+    }
+
+    @Override
+    public Connection get(Channel channel) {
+        return connectionMap.get(channel);
     }
 
     @Override

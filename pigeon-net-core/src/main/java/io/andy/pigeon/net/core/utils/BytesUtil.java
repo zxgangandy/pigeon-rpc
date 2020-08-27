@@ -18,4 +18,9 @@ public class BytesUtil {
                 ((b[off + 1] & 0xFFL) << 48) +
                 (((long) b[off + 0]) << 56);
     }
+
+    public static short bytes2short(byte[] b, int off) {
+        return (short) (((b[off + 1] & 0xFF) << 0) +
+                ((b[off + 0]) << 8));
+    }
 }

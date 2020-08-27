@@ -1,10 +1,10 @@
-package io.andy.pigeon.net.core.message.transmitter;
+package io.andy.pigeon.net.core.message.emitter;
 
 import io.andy.pigeon.net.core.base.Url;
 import io.andy.pigeon.net.core.connection.ConnectionMgr;
 
-public class ServerMsgTransmitter extends BaseMsgTransmitter {
-    public ServerMsgTransmitter(ConnectionMgr connectionMgr) {
+public class ServerMsgEmitter extends BaseMsgEmitter {
+    public ServerMsgEmitter(ConnectionMgr connectionMgr) {
         super(connectionMgr);
     }
 

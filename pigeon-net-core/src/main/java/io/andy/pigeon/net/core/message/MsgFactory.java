@@ -2,9 +2,13 @@ package io.andy.pigeon.net.core.message;
 
 public interface MsgFactory {
 
+    Envelope createOneWay(Object requestObject);
 
-    Envelope createOneWay(final Object requestObject);
+    Envelope createTwoWay(Object requestObject);
 
+    Envelope createHeartbeatReq();
 
-    Envelope createTwoWay(final Object requestObject);
+    Envelope createHeartbeatAck(Envelope req);
+
+    Envelope createTwoWayAck(Envelope req, Object responseBody);
 }

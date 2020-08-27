@@ -47,7 +47,7 @@ public class NettyClientTest {
                 .port(8500)
                 .build();
 
-        for (int i=0; i< 500; i++) {
+        for (int i=0; i< 1; i++) {
             client.oneWay(url, "hello" + i);
         }
 

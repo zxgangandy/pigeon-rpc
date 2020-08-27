@@ -8,14 +8,14 @@ import io.netty.handler.codec.ByteToMessageDecoder;
 import java.util.List;
 
 public class NettyDecoder extends ByteToMessageDecoder {
-    private MsgCodecFactory codec;
+    private MsgCodecFactory codecFactory;
 
-    public NettyDecoder(MsgCodecFactory codec) {
-        this.codec = codec;
+    public NettyDecoder(MsgCodecFactory codecFactory) {
+        this.codecFactory = codecFactory;
     }
 
     @Override
     protected void decode(ChannelHandlerContext channelHandlerContext, ByteBuf in, List<Object> out) throws Exception {
-        codec.getDecoder().decode(in, out);
+        codecFactory.getDecoder().decode(in, out);
     }
 }

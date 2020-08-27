@@ -1,4 +1,4 @@
-package io.andy.pigeon.net.core.message.transmitter;
+package io.andy.pigeon.net.core.message.emitter;
 
 import io.andy.pigeon.net.core.connection.Connection;
 import io.andy.pigeon.net.core.connection.ConnectionMgr;
@@ -13,10 +13,10 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.concurrent.Future;
 
 @Slf4j
-public abstract class BaseMsgTransmitter {
+public abstract class BaseMsgEmitter {
     protected ConnectionMgr connectionMgr;
 
-    public BaseMsgTransmitter(ConnectionMgr connectionMgr) {
+    public BaseMsgEmitter(ConnectionMgr connectionMgr) {
         this.connectionMgr = connectionMgr;
     }
 
@@ -26,7 +26,7 @@ public abstract class BaseMsgTransmitter {
     }
 
     public void oneWay(final Connection conn, final Object request) {
-        Envelope envelope = new DefaultMsgFactory().createOneWay(request);
+        Envelope envelope = DefaultMsgFactory.getInstance().createOneWay(request);
         try {
             conn.getChannel().writeAndFlush(envelope).addListener((ChannelFuture f) -> {
                 if (!f.isSuccess()) {

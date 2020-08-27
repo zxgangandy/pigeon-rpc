@@ -9,4 +9,8 @@ public interface Envelope {
 
     long getReqId();
 
+    MsgType getMsgType();
+
+    String getClazzStr();
+
 }

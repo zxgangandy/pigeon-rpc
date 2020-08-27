@@ -8,9 +8,9 @@ import io.andy.pigeon.net.core.codec.NettyEncoder;
 import io.andy.pigeon.net.core.connection.ClientConnectionMgr;
 import io.andy.pigeon.net.core.connection.ConnectionMgr;
 import io.andy.pigeon.net.core.constant.Constants;
-import io.andy.pigeon.net.core.handler.ClientMessageHandler;
-import io.andy.pigeon.net.core.message.transmitter.BaseMsgTransmitter;
-import io.andy.pigeon.net.core.message.transmitter.ClientMsgTransmitter;
+import io.andy.pigeon.net.core.handler.NettyMessageHandler;
+import io.andy.pigeon.net.core.message.emitter.BaseMsgEmitter;
+import io.andy.pigeon.net.core.message.emitter.ClientMsgEmitter;
 import io.andy.pigeon.net.core.utils.NamedThreadFactory;
 import io.andy.pigeon.net.core.utils.NettyEventLoopUtil;
 import io.netty.bootstrap.Bootstrap;
@@ -30,7 +30,7 @@ public abstract class AbstractClientEndpoint extends AbstractRemotingEndpoint {
             new NamedThreadFactory("netty-client-worker", true));
 
     private MsgCodecFactory codecFactory;
-    protected BaseMsgTransmitter msgTransmitter;
+    protected BaseMsgEmitter msgTransmitter;
     private ConnectionMgr connectionMgr;
 
     private Bootstrap bootstrap;
@@ -41,7 +41,7 @@ public abstract class AbstractClientEndpoint extends AbstractRemotingEndpoint {
 
         this.codecFactory = new DefaultMsgCodecFactory();
         this.connectionMgr = new ClientConnectionMgr(bootstrap, getChannelPoolHandler());
-        this.msgTransmitter = new ClientMsgTransmitter(connectionMgr);
+        this.msgTransmitter = new ClientMsgEmitter(connectionMgr);
     }
 
     @Override
@@ -86,7 +86,7 @@ public abstract class AbstractClientEndpoint extends AbstractRemotingEndpoint {
                         TimeUnit.SECONDS)
                 );
 
-                pipeline.addLast("m", new ClientMessageHandler());
+                pipeline.addLast("m", new NettyMessageHandler(false, connectionMgr));
             }
         };
     }

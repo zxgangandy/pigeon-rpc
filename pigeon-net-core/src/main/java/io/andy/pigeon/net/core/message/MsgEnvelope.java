@@ -5,6 +5,8 @@ import io.andy.pigeon.net.core.utils.ProtoStuffUtils;
 import lombok.Data;
 import lombok.experimental.Accessors;
 
+import java.nio.charset.StandardCharsets;
+
 
 /***
  * 底层传输消息体封装
@@ -38,10 +40,18 @@ public class MsgEnvelope implements Envelope{
      */
     private long reqId;
 
+
+
+    /** The bodyLength of clazz */
+    private short clazzLength = 0;
+
     /**
      * body长度，4位
      */
-    private int length;
+    private int bodyLength;
+
+    /** The class of content */
+    private byte[] clazz;
 
     /**
      * 内容体
@@ -58,5 +68,14 @@ public class MsgEnvelope implements Envelope{
         return reqId;
     }
 
+    @Override
+    public MsgType getMsgType() {
+        return MsgType.of(type);
+    }
+
+    @Override
+    public String getClazzStr() {
+        return new String(clazz, StandardCharsets.UTF_8);
+    }
 
 }

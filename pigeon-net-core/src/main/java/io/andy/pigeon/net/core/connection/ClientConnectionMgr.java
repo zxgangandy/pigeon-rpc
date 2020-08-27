@@ -2,11 +2,14 @@ package io.andy.pigeon.net.core.connection;
 
 import io.andy.pigeon.net.core.base.Url;
 import io.andy.pigeon.net.core.exception.ConnectionException;
+import io.andy.pigeon.net.core.utils.TimerHolder;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.Channel;
 import io.netty.channel.pool.AbstractChannelPoolMap;
 import io.netty.channel.pool.ChannelPoolHandler;
 import io.netty.channel.pool.FixedChannelPool;
+import io.netty.util.Timeout;
+import io.netty.util.TimerTask;
 import io.netty.util.concurrent.Future;
 import lombok.extern.slf4j.Slf4j;
 
@@ -14,10 +17,13 @@ import java.net.InetSocketAddress;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 @Slf4j
-public class ClientConnectionMgr extends AbstractChannelPoolMap<InetSocketAddress, FixedChannelPool>  implements ConnectionMgr {
+public class ClientConnectionMgr extends AbstractChannelPoolMap<InetSocketAddress, FixedChannelPool>  implements
+        ConnectionMgr, ReconnectMgr {
     private static final int MAX_CONNS = 1;
+
     private ChannelPoolHandler channelPoolHandler;
     private Bootstrap bootstrap;
 
@@ -36,13 +42,20 @@ public class ClientConnectionMgr extends AbstractChannelPoolMap<InetSocketAddres
     }
 
     @Override
-    public void remove(Connection connection) {
-        connectionMap.remove(connection.getChannel());
+    public void add(Channel channel, Url url) {
+        getOrAddConnection(channel, url);
     }
 
     @Override
-    public Connection get(String key) {
-        return null;
+    public void removeIfDisconnected(Channel channel) {
+        if (channel != null && !channel.isActive()) {
+            connectionMap.remove(channel);
+        }
+    }
+
+    @Override
+    public Connection get(Channel channel) {
+        return connectionMap.get(channel);
     }
 
     @Override
@@ -53,7 +66,7 @@ public class ClientConnectionMgr extends AbstractChannelPoolMap<InetSocketAddres
         Channel ch = null;
         try {
             Long start = System.currentTimeMillis();
-            Future<io.netty.channel.Channel> future = pool.acquire();
+            Future<Channel> future = pool.acquire();
             boolean ret = future.awaitUninterruptibly(connectTimeout, TimeUnit.MILLISECONDS);
             if (ret && future.isSuccess()) {
                 ch = future.getNow();
@@ -80,12 +93,23 @@ public class ClientConnectionMgr extends AbstractChannelPoolMap<InetSocketAddres
                 });
             }
         }
+
+        if (ch != null && !ch.isActive()) {
+            ch.pipeline().fireUserEventTriggered(ConnectionEvent.CONNECT_FAILED);
+        }
         return getOrAddConnection(ch, url);
     }
 
     @Override
     protected FixedChannelPool newPool(InetSocketAddress key) {
         return new FixedChannelPool(bootstrap.remoteAddress(key), channelPoolHandler, MAX_CONNS);
+    }
+
+
+    @Override
+    public void reconnect(Url url) {
+        ReconnectTimerTask task = new ReconnectTimerTask(url);
+        TimerHolder.getTimer().newTimeout(task, task.getCount() * 3, TimeUnit.SECONDS);
     }
 
     private Connection getOrAddConnection(Channel ch, Url url) {
@@ -104,4 +128,37 @@ public class ClientConnectionMgr extends AbstractChannelPoolMap<InetSocketAddres
         }
         return ret;
     }
+
+
+
+    private class ReconnectTimerTask implements TimerTask {
+        private final Url url;
+        private AtomicInteger reconnectCount = new AtomicInteger(0);
+
+        private ReconnectTimerTask(Url url) {
+            this.url = url;
+        }
+
+        public void addCount() {
+            reconnectCount.getAndIncrement();
+        }
+
+        protected int getCount() {
+            return reconnectCount.get();
+        }
+
+        @Override
+        public void run(Timeout timeout) throws Exception {
+            try {
+                log.info("Reconnect to server count={}, url={}", getCount(), url);
+                Connection connection = get(url);
+
+                log.info("In reconnect timer, the connection={}", connection);
+            } catch (Exception e) {
+                addCount();
+                log.error("reconnect to server url={}, error={}", url, e);
+            }
+        }
+    }
+
 }

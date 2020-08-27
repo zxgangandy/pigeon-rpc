@@ -16,11 +16,14 @@ public class DefaultMsgEncoder implements MsgEncoder<MsgEnvelope> {
 
         // 判空长度写0
         if (msg.getBody() == null) {
+            out.writeShort(0);
             out.writeInt(0);
             return;
         }
 
+        out.writeShort(msg.getClazz().length);
         out.writeInt(msg.getBody().length);
+        out.writeBytes(msg.getClazz());
         out.writeBytes(msg.getBody());
     }
 }

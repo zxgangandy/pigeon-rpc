@@ -17,14 +17,19 @@ public enum MsgType {
     REQ_TWO_WAY((byte)0x02),
 
     /**
-     * resp
+     * ack - twoWay
      */
-    MODE_RESP((byte)0x03),
+    ACK_TWO_WAY((byte)0x03),
 
     /**
-     * heartbeat
+     * heartbeat req
      */
-    MODE_HEARTBEAT((byte)0x04),
+    REQ_HEARTBEAT((byte)0x04),
+
+    /**
+     * heartbeat ack
+     */
+    ACK_HEARTBEAT((byte)0x05),
     ;
 
     private byte type;
@@ -37,4 +42,13 @@ public enum MsgType {
         return type;
     }
 
+    public static MsgType of(byte type) {
+        for (MsgType msgType : values()) {
+            if (msgType.getType() == type) {
+                return msgType;
+            }
+        }
+
+        return null;
+    }
 }

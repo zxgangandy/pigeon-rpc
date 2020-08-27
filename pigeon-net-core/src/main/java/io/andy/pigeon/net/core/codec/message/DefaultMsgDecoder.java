@@ -9,8 +9,8 @@ public class DefaultMsgDecoder implements MsgDecoder{
 
     private int MIN_ENVELOPE_BYTES = envelopSize(0);
 
-    public int envelopSize(int bodyLength) {
-        return getMsgHeaderSize() + bodyLength;
+    public int envelopSize(int extraLength) {
+        return getMsgHeaderSize() + extraLength;
     }
 
     private MsgHeaderDecoder headerDecoder;
@@ -41,30 +41,38 @@ public class DefaultMsgDecoder implements MsgDecoder{
             return;
         }
 
+        short clazzLength = headerDecoder.getClazzLength(header);
         int bodyLength = headerDecoder.getBodyLength(header);
-        if( in.readableBytes() >= envelopSize(bodyLength)) {
-            out.add(decodeMsg(in, header, magic, bodyLength));
+        int extraLength = clazzLength + bodyLength;
+
+        if( in.readableBytes() >= envelopSize(extraLength)) {
+            out.add(decodeMsg(in, header, magic, clazzLength, bodyLength));
         } else {
             in.readerIndex(saveReadIndex);
         }
     }
 
-    private MsgEnvelope decodeMsg(ByteBuf in, byte[] header, byte magic, int bodyLength) {
+    private MsgEnvelope decodeMsg(ByteBuf in, byte[] header, byte magic, short clazzLength, int bodyLength) {
         MsgEnvelope msg = new MsgEnvelope();
         msg.setMagic(magic);
         msg.setType(headerDecoder.getType(header));
         msg.setCodec(headerDecoder.getCodec(header));
         msg.setReqId(headerDecoder.getReqId(header));
-        msg.setLength(bodyLength);
+        msg.setBodyLength(bodyLength);
+        msg.setClazzLength(clazzLength);
 
-        setBodyIfNecessary(in, msg);
+        setClazzAndBodyIfNecessary(in, msg);
 
         return msg;
     }
 
-    private void setBodyIfNecessary(ByteBuf in, MsgEnvelope msg) {
-        if (msg.getLength() > 0) {
-            byte[] body = new byte[msg.getLength()];
+    private void setClazzAndBodyIfNecessary(ByteBuf in, MsgEnvelope msg) {
+        if (msg.getBodyLength() > 0) {
+            byte[] clazz = new byte[msg.getClazzLength()];
+            in.readBytes(clazz);
+            msg.setClazz(clazz);
+
+            byte[] body = new byte[msg.getBodyLength()];
             in.readBytes(body);
             msg.setBody(body);
         }

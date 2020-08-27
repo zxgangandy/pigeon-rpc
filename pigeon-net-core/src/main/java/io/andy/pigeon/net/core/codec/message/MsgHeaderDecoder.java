@@ -11,4 +11,7 @@ public interface MsgHeaderDecoder extends Decoder {
     int getBodyLength(byte[] header);
 
     long getReqId(byte[] header);
+
+    short getClazzLength(byte[] header);
+
 }

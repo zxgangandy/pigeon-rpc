@@ -9,14 +9,14 @@ import io.netty.handler.codec.MessageToByteEncoder;
 
 @ChannelHandler.Sharable
 public class NettyEncoder extends MessageToByteEncoder<Envelope> {
-    private MsgCodecFactory codec;
+    private MsgCodecFactory codecFactory;
 
-    public NettyEncoder(MsgCodecFactory codec) {
-        this.codec = codec;
+    public NettyEncoder(MsgCodecFactory codecFactory) {
+        this.codecFactory = codecFactory;
     }
 
     @Override
     protected void encode(ChannelHandlerContext ctx, Envelope msg, ByteBuf out) throws Exception {
-        codec.getEncoder().encode(ctx, msg, out);
+        codecFactory.getEncoder().encode(ctx, msg, out);
     }
 }

@@ -2,14 +2,22 @@ package io.andy.pigeon.net.core.connection;
 
 import io.andy.pigeon.net.core.base.Url;
 import io.netty.channel.Channel;
+import io.netty.util.AttributeKey;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 
 import java.net.InetSocketAddress;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 @Data
 @Slf4j
 public class Connection {
+
+    public static final AttributeKey<Integer> HEARTBEAT_COUNT = AttributeKey.valueOf("heartbeatCount");
+    public static final AttributeKey<Connection> CONNECTION   = AttributeKey.valueOf("connection");
+
+    private Lock connectionLock = new ReentrantLock();
 
     private Channel channel;
 
@@ -18,6 +26,9 @@ public class Connection {
     public Connection(Channel channel, Url url) {
         this.channel = channel;
         this.url = url;
+
+        this.channel.attr(HEARTBEAT_COUNT).set(0);
+        this.channel.attr(CONNECTION).set(this);
     }
 
 
@@ -39,6 +50,10 @@ public class Connection {
         }
 
         return (InetSocketAddress) this.channel.remoteAddress();
+    }
+
+    public boolean isActive(){
+        return channel.isActive();
     }
 
     public void close() {
