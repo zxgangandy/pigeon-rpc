@@ -6,5 +6,5 @@ package io.andy.pigeon.net.core.connection;
  *
  */
 public enum ConnectionEvent {
-    CONNECT, CONNECT_FAILED, CLOSE
+    CONNECT, IDLE, CONNECT_FAILED, CLOSE
 }

@@ -5,8 +5,8 @@ import io.andy.pigeon.net.core.connection.ClientConnectionMgr;
 import io.andy.pigeon.net.core.connection.Connection;
 import io.andy.pigeon.net.core.connection.ConnectionEvent;
 import io.andy.pigeon.net.core.connection.ConnectionMgr;
-import io.andy.pigeon.net.core.event.dispatcher.DefaultEventDispatcher;
-import io.andy.pigeon.net.core.event.dispatcher.EventDispatcher;
+import io.andy.pigeon.net.core.connection.event.dispatcher.DefaultEventDispatcher;
+import io.andy.pigeon.net.core.connection.event.dispatcher.EventDispatcher;
 import io.andy.pigeon.net.core.message.Envelope;
 import io.andy.pigeon.net.core.message.dispatcher.DefaultMsgDispatcher;
 import io.andy.pigeon.net.core.message.dispatcher.MsgDispatcher;
@@ -17,6 +17,8 @@ import io.netty.handler.timeout.IdleStateEvent;
 import lombok.extern.slf4j.Slf4j;
 
 import java.net.InetSocketAddress;
+
+import static io.andy.pigeon.net.core.connection.ConnectionEvent.IDLE;
 
 @ChannelHandler.Sharable
 @Slf4j
@@ -94,15 +96,7 @@ public class NettyMessageHandler extends SimpleChannelInboundHandler<Envelope> {
                 return;
             }
 
-            /**
-             *  链接活跃的情况下才分发事件
-             */
-            if (ctx.channel().isActive()) {
-                eventDispatcher.dispatch(ctx);
-            } else {
-                ClientConnectionMgr clientConnectionMgr = (ClientConnectionMgr) connectionMgr;
-                clientConnectionMgr.reconnect(connection.getUrl());
-            }
+            eventDispatcher.dispatch(IDLE, connection);
         }
     }
 
@@ -119,6 +113,7 @@ public class NettyMessageHandler extends SimpleChannelInboundHandler<Envelope> {
 
             switch (eventType) {
                 case CONNECT:
+                    eventDispatcher.dispatch(eventType, connection);
                     break;
                 case CONNECT_FAILED:
                 case CLOSE:
