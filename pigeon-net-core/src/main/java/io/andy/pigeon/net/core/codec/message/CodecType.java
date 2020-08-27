@@ -1,4 +1,4 @@
-package io.andy.pigeon.net.core.serialization;
+package io.andy.pigeon.net.core.codec.message;
 
 
 import lombok.Getter;

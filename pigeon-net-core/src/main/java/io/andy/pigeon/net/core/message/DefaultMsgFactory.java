@@ -1,6 +1,6 @@
 package io.andy.pigeon.net.core.message;
 
-import io.andy.pigeon.net.core.serialization.CodecType;
+import io.andy.pigeon.net.core.codec.message.CodecType;
 import io.andy.pigeon.net.core.utils.IDGenerator;
 
 public class DefaultMsgFactory implements MsgFactory {
