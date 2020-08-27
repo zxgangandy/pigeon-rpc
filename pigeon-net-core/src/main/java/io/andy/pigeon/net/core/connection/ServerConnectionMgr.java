@@ -1,7 +1,7 @@
 package io.andy.pigeon.net.core.connection;
 
 
-import io.andy.pigeon.net.core.base.Url;
+import io.andy.pigeon.net.core.Url;
 import io.netty.channel.Channel;
 
 import java.util.Map;

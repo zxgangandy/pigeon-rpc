@@ -1,4 +1,4 @@
-package io.andy.pigeon.net.core.base;
+package io.andy.pigeon.net.core;
 
 import io.andy.pigeon.net.core.config.Configurable;
 import io.andy.pigeon.net.core.config.Option;

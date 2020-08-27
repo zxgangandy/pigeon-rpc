@@ -1,7 +1,7 @@
 package io.andy.pigeon.net.core.client;
 
 import io.andy.pigeon.net.core.connection.Connection;
-import io.andy.pigeon.net.core.base.Url;
+import io.andy.pigeon.net.core.Url;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j

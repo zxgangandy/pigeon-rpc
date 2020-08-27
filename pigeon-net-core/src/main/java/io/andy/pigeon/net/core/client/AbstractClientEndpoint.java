@@ -1,6 +1,6 @@
 package io.andy.pigeon.net.core.client;
 
-import io.andy.pigeon.net.core.base.AbstractRemotingEndpoint;
+import io.andy.pigeon.net.core.AbstractRemotingEndpoint;
 import io.andy.pigeon.net.core.codec.message.DefaultMsgCodecFactory;
 import io.andy.pigeon.net.core.codec.message.MsgCodecFactory;
 import io.andy.pigeon.net.core.codec.NettyDecoder;

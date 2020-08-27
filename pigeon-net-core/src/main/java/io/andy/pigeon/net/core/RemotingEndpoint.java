@@ -1,4 +1,4 @@
-package io.andy.pigeon.net.core.base;
+package io.andy.pigeon.net.core;
 
 
 public interface RemotingEndpoint {

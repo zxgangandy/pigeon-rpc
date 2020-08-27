@@ -1,12 +1,7 @@
 package io.andy.pigeon.net.core.client;
 
-import io.andy.pigeon.net.core.base.Url;
+import io.andy.pigeon.net.core.Url;
 import io.andy.pigeon.net.core.config.ClientOption;
-import io.andy.pigeon.net.core.server.NettyServer;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.JUnit4;
 
 //@RunWith(JUnit4.class)
 public class NettyClientTest {
