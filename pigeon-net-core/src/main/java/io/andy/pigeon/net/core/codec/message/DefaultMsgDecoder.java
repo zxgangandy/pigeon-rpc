@@ -45,7 +45,7 @@ public class DefaultMsgDecoder implements MsgDecoder{
         int bodyLength = headerDecoder.getBodyLength(header);
         int extraLength = clazzLength + bodyLength;
 
-        if( in.readableBytes() >= envelopSize(extraLength)) {
+        if( readable >= envelopSize(extraLength)) {
             out.add(decodeMsg(in, header, magic, clazzLength, bodyLength));
         } else {
             in.readerIndex(saveReadIndex);

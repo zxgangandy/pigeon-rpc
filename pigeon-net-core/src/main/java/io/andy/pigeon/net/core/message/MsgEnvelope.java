@@ -16,21 +16,22 @@ import java.nio.charset.StandardCharsets;
 public class MsgEnvelope implements Envelope{
 
     /**
-     * 魔法数 1位
+     * 魔法数 1byte
      */
     private byte magic = (byte) 0xab;
 
     /**
-     * 请求模式 1位
+     * 请求模式 1 byte
      * 0x01 - req - oneWay
      * 0x02 - req - twoWay
      * 0x03 - resp
-     * 0x04 - Heartbeat
+     * 0x04 - Heartbeat req
+     * 0x05 - Heartbeat ack
      */
     private byte type;
 
     /**
-     * 序列化方式 1位
+     * 序列化方式 1 byte
      * 0x01 - JSON
      */
     private byte codec;
@@ -39,8 +40,6 @@ public class MsgEnvelope implements Envelope{
      * 请求id， 8位
      */
     private long reqId;
-
-
 
     /** The bodyLength of clazz */
     private short clazzLength = 0;

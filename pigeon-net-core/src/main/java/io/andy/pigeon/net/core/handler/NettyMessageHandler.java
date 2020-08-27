@@ -36,20 +36,14 @@ public class NettyMessageHandler extends SimpleChannelInboundHandler<Envelope> {
 
     @Override
     protected void channelRead0(ChannelHandlerContext ctx, Envelope envelope) throws Exception {
-        try {
-            log.info("envelope=" + envelope);
-            msgDispatcher.dispatch(ctx, envelope);
-        } catch (Throwable t) {
-            log.error("t={}", t);
-        }
+        log.info("envelope=" + envelope);
+        msgDispatcher.dispatch(ctx, envelope);
     }
 
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
         try {
             log.error("Channel exception ,peer={}, cause={} ",ctx.channel().remoteAddress(), cause);
-        } catch (Throwable t) {
-            log.error("t={}", t);
         }finally {
             connectionMgr.removeIfDisconnected(ctx.channel());
         }

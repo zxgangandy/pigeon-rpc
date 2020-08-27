@@ -30,7 +30,7 @@ public abstract class AbstractClientEndpoint extends AbstractRemotingEndpoint {
             new NamedThreadFactory("netty-client-worker", true));
 
     private MsgCodecFactory codecFactory;
-    protected BaseMsgEmitter msgTransmitter;
+    protected BaseMsgEmitter msgEmitter;
     private ConnectionMgr connectionMgr;
 
     private Bootstrap bootstrap;
@@ -41,7 +41,7 @@ public abstract class AbstractClientEndpoint extends AbstractRemotingEndpoint {
 
         this.codecFactory = new DefaultMsgCodecFactory();
         this.connectionMgr = new ClientConnectionMgr(bootstrap, getChannelPoolHandler());
-        this.msgTransmitter = new ClientMsgEmitter(connectionMgr);
+        this.msgEmitter = new ClientMsgEmitter(connectionMgr);
     }
 
     @Override
