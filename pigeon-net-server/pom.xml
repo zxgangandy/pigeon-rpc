@@ -4,15 +4,16 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <parent>
         <artifactId>pigeon-rpc</artifactId>
-        <groupId>io.andy.pigeon</groupId>
+        <groupId>io.github.zxgangandy</groupId>
         <version>1.0-SNAPSHOT</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>pigeon-rpc-server</artifactId>
+    <version>1.0-SNAPSHOT</version>
     <dependencies>
         <dependency>
-            <groupId>io.andy.pigeon</groupId>
+            <groupId>io.github.zxgangandy</groupId>
             <artifactId>pigeon-rpc-core</artifactId>
             <version>1.0-SNAPSHOT</version>
             <scope>compile</scope>
