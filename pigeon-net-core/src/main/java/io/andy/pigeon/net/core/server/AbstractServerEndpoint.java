@@ -8,6 +8,7 @@ import io.andy.pigeon.net.core.codec.NettyEncoder;
 import io.andy.pigeon.net.core.config.*;
 import io.andy.pigeon.net.core.connection.ServerConnectionMgr;
 import io.andy.pigeon.net.core.constant.Constants;
+import io.andy.pigeon.net.core.exception.StartException;
 import io.andy.pigeon.net.core.handler.NettyMessageHandler;
 import io.andy.pigeon.net.core.utils.NamedThreadFactory;
 import io.andy.pigeon.net.core.utils.NettyEventLoopUtil;
@@ -41,17 +42,23 @@ public abstract class AbstractServerEndpoint extends AbstractRemotingEndpoint {
             new NamedThreadFactory("netty-server-worker", true));
 
     @Override
-    public void start()  {
+    public AbstractServerEndpoint start()  {
+        super.start();
+
         this.codecFactory = new DefaultMsgCodecFactory();
         this.connectionMgr = new ServerConnectionMgr();
 
         startup();
 
         log.info("Netty server started!!");
+
+        return this;
     }
 
     @Override
     public void stop() {
+        super.stop();
+
         if (null != this.channelFuture) {
             this.channelFuture.channel().close();
         }
@@ -125,6 +132,15 @@ public abstract class AbstractServerEndpoint extends AbstractRemotingEndpoint {
 
 
     private int getBindPort() {
-        return option(ServerOption.PORT);
+        return putOptionGet(ServerOption.PORT);
     }
+
+    protected void checkStarted() {
+        if (!started()) {
+            throw new StartException(String.format("Server has not been started yet!"));
+        }
+    }
+
+
+
 }

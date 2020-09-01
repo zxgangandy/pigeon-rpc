@@ -1,15 +1,16 @@
 package io.andy.pigeon.net.core.message.invoker;
 
 public interface InvokerMgr {
-    Invoker getReqInvoker();
+    Invoker getOneWayInvoker();
 
-    Invoker getRespInvoker();
+    Invoker getTwoWayInvoker();
 
-    default DefaultReqInvoker getDefaultReqInvoker() {
-        return new DefaultReqInvoker();
+    default OneWayInvoker getDefaultOneWayInvoker() {
+        return new OneWayInvoker();
     }
 
-    default DefaultRespInvoker getDefaultRespInvoker() {
-        return new DefaultRespInvoker();
+    default TwoWayInvoker getDefaultTwoWayInvoker() {
+        return new TwoWayInvoker();
     }
+
 }

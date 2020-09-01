@@ -37,4 +37,5 @@ public class Constants {
     public static final String MAX_CONNECTION = "max.connection";
     public static final int DEFAULT_MAX_CONNECTION = 1;
     public static final int DEFAULT_CONNECT_TIMEOUT = 10000;
+    public static final int DEFAULT_REQUEST_TIMEOUT = 5000;
 }

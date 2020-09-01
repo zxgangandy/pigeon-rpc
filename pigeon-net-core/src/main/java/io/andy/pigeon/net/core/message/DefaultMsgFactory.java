@@ -33,7 +33,15 @@ public class DefaultMsgFactory implements MsgFactory {
 
     @Override
     public Envelope createTwoWay(Object requestObject) {
-        return null;
+        MsgEnvelope  envelope =  new MsgEnvelope();
+
+        envelope.setType(MsgType.REQ_TWO_WAY.getType())
+                .setCodec(CodecType.PROTO_STUFF.getType())
+                .setReqId(IDGenerator.nextId())
+                .setClazz(requestObject.getClass().getName().getBytes())
+                .serialize(requestObject);
+
+        return envelope;
     }
 
     @Override
@@ -62,7 +70,31 @@ public class DefaultMsgFactory implements MsgFactory {
     public Envelope createTwoWayAck(Envelope req, Object responseBody) {
         RespMsg  envelope =  new RespMsg(responseBody);
 
-        envelope.setType(MsgType.ACK_HEARTBEAT.getType())
+        envelope.setType(MsgType.ACK_TWO_WAY.getType())
+                .setCodec(CodecType.PROTO_STUFF.getType())
+                .setClazz(responseBody.getClass().getName().getBytes())
+                .setReqId(req.getReqId())
+                .serialize(responseBody);
+
+        return envelope;
+    }
+
+    @Override
+    public RespMsg createReqTimeout(Envelope req) {
+        RespMsg  envelope =  new RespMsg(null);
+
+        envelope.setType(MsgType.ACK_TWO_WAY.getType())
+                .setCodec(CodecType.PROTO_STUFF.getType())
+                .setReqId(req.getReqId());
+
+        return envelope;
+    }
+
+    @Override
+    public RespMsg createReqFailed(Envelope req) {
+        RespMsg  envelope =  new RespMsg(null);
+
+        envelope.setType(MsgType.ACK_TWO_WAY.getType())
                 .setCodec(CodecType.PROTO_STUFF.getType())
                 .setReqId(req.getReqId());
 

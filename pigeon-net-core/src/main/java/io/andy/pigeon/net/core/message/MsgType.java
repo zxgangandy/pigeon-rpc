@@ -7,7 +7,7 @@ package io.andy.pigeon.net.core.message;
 public enum MsgType {
 
     /**
-     * req - oneWay
+     * req - oneWayRequest
      */
     REQ_ONE_WAY((byte)0x01),
 

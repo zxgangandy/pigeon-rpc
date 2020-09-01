@@ -38,7 +38,7 @@ public class NettyMessageHandler extends SimpleChannelInboundHandler<Envelope> {
 
     @Override
     protected void channelRead0(ChannelHandlerContext ctx, Envelope envelope) throws Exception {
-        log.info("envelope=" + envelope);
+        log.info("Received message={}", envelope);
         msgDispatcher.dispatch(ctx, envelope);
     }
 

@@ -1,38 +1,97 @@
 package io.andy.pigeon.net.core;
 
-import io.andy.pigeon.net.core.config.Configurable;
+import io.andy.pigeon.net.core.config.ClientOption;
 import io.andy.pigeon.net.core.config.Option;
 import io.andy.pigeon.net.core.config.Options;
 import io.andy.pigeon.net.core.connection.Connection;
 import io.andy.pigeon.net.core.connection.ConnectionMgr;
+import io.andy.pigeon.net.core.exception.StartException;
 import io.andy.pigeon.net.core.message.DefaultMsgFactory;
 import io.andy.pigeon.net.core.message.Envelope;
+import io.andy.pigeon.net.core.message.MsgFactory;
+import io.andy.pigeon.net.core.message.RespMsg;
+import io.andy.pigeon.net.core.message.invoker.DefaultInvokeFuture;
+import io.andy.pigeon.net.core.message.invoker.InvokeFuture;
 import io.andy.pigeon.net.core.utils.RemotingUtil;
 import io.netty.channel.ChannelFuture;
 import io.netty.util.internal.ObjectUtil;
 import lombok.extern.slf4j.Slf4j;
 
-@Slf4j
-public abstract class AbstractRemotingEndpoint implements RemotingEndpoint, Configurable {
+import java.util.concurrent.atomic.AtomicBoolean;
 
-    private final Options options = new Options();
+@Slf4j
+public abstract class AbstractRemotingEndpoint implements RemotingEndpoint {
+
+    private AtomicBoolean start = new AtomicBoolean(false);
+    protected final Options options = new Options();
     protected ConnectionMgr connectionMgr;
+    private MsgFactory msgFactory;
+
+    public AbstractRemotingEndpoint() {
+        this.msgFactory = DefaultMsgFactory.getInstance();
+    }
 
     @Override
-    public <T> Configurable option(Option<T> option, T value) {
+    public RemotingEndpoint start() {
+        if (start.compareAndSet(false, true)) {
+            return this;
+        }
+        throw new StartException("The node has started");
+    }
+
+    @Override
+    public boolean started() {
+        return start.get();
+    }
+
+    @Override
+    public void stop() {
+        if (start.compareAndSet(true, false)) {
+            return;
+        }
+        throw new StartException("The node has shutdown");
+    }
+
+    //    @Override
+//    public <T> RemotingEndpoint option(Option<T> option, T value) {
+//        ObjectUtil.checkNotNull(option, "option");
+//        this.options.option(option, value);
+//        return this;
+//    }
+//
+//    @Override
+//    public <T> T option(Option<T> option) {
+//        return options.option(option);
+//    }
+
+//
+    @Override
+    public <T> RemotingEndpoint config(Option<T> option, T value) {
         ObjectUtil.checkNotNull(option, "option");
         this.options.option(option, value);
         return this;
     }
 
     @Override
-    public <T> T option(Option<T> option) {
+    public <T> T putOptionGet(Option<T> option) {
         return options.option(option);
     }
 
 
-    public void sendOneWayMsg(final Connection conn, final Object request) {
-        Envelope envelope = DefaultMsgFactory.getInstance().createOneWay(request);
+//    @Override
+//    public <T> B config(Option<T> option, Object value) {
+//        ObjectUtil.checkNotNull(option, "option");
+//        this.options.option(option, value);
+//        return this;
+//    }
+//
+//    @Override
+//    public <T> T putOptionGet(Option<T>  option) {
+//        return options.option(option);
+//    }
+
+    protected void sendOneWayMsg(final Connection conn, final Object request) {
+        Envelope envelope = msgFactory.createOneWay(request);
         try {
             conn.getChannel().writeAndFlush(envelope).addListener((ChannelFuture f) -> {
                 if (!f.isSuccess()) {
@@ -57,5 +116,48 @@ public abstract class AbstractRemotingEndpoint implements RemotingEndpoint, Conf
         Connection conn = connectionMgr.get(url);
         sendOneWayMsg(conn, request);
     }
+
+    public RespMsg sendSyncMsg(final Connection conn, final Object request)  throws InterruptedException{
+        Envelope envelope = msgFactory.createTwoWay(request);
+        final long requestId = envelope.getReqId();
+        final InvokeFuture future = new DefaultInvokeFuture(requestId);
+        conn.addInvokeFuture(future);
+
+        try {
+            conn.getChannel().writeAndFlush(envelope).addListener((ChannelFuture f) -> {
+                if (!f.isSuccess()) {
+                    conn.removeInvokeFuture(requestId);
+                    future.complete(msgFactory.createReqFailed(envelope));
+
+                    log.error("Two way send failed. The address is {}",
+                            RemotingUtil.parseRemoteAddress(conn.getChannel()), f.cause());
+                } else {
+                    log.debug("Two way send success!!");
+                }
+            });
+        } catch (Exception e) {
+            conn.removeInvokeFuture(requestId);
+            future.complete(msgFactory.createReqFailed(envelope));
+
+            log.error("Exception caught when sending invocation. The address is {}",
+                    RemotingUtil.parseRemoteAddress(conn.getChannel()), e);
+
+        }
+
+        RespMsg respMsg = future.get(putOptionGet(ClientOption.REQUEST_TIMEOUT));
+        if (respMsg == null) {
+            conn.removeInvokeFuture(requestId);
+            respMsg = msgFactory.createReqTimeout(envelope);
+        }
+
+        return respMsg;
+    }
+
+    protected RespMsg sendSyncMsg(final Url url, final Object request)  throws InterruptedException{
+        Connection conn = connectionMgr.get(url);
+        return sendSyncMsg(conn, request);
+    }
+
+
 
 }

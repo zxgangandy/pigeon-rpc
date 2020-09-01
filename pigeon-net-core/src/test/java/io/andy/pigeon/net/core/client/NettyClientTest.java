@@ -1,6 +1,6 @@
 package io.andy.pigeon.net.core.client;
 
-import io.andy.pigeon.net.core.Url;
+import io.andy.pigeon.net.core.Pigeon;
 import io.andy.pigeon.net.core.config.ClientOption;
 
 //@RunWith(JUnit4.class)
@@ -24,7 +24,7 @@ public class NettyClientTest {
 //                .port(8500)
 //                .build();
 //
-//        client.oneWay(url, "hello");
+//        client.oneWayRequest(url, "hello");
 //
 //        try {
 //            Thread.sleep(5000);
@@ -34,17 +34,13 @@ public class NettyClientTest {
 //    }
 
     public static void main(String[] argv) {
-        NettyClient client = new NettyClient();
-        client.option(ClientOption.CONNECT_TIMEOUT, 3000);
-        client.start();
+        Pigeon.with(NettyClient.class)
+                .serverIp("127.0.0.1")
+                .serverPort(8500)
+                .config(ClientOption.CONNECT_TIMEOUT, 3000)
+                .start()
+                .oneWayRequest("hello");
 
-        Url url = Url.builder().ip("127.0.0.1")
-                .port(8500)
-                .build();
-
-        for (int i=0; i< 1; i++) {
-            client.oneWay(url, "hello" + i);
-        }
 
         try {
             Thread.sleep(500000);
@@ -52,6 +48,8 @@ public class NettyClientTest {
             e.printStackTrace();
         }
     }
+
+
 
 
 }

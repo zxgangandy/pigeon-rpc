@@ -7,8 +7,9 @@ public class DefaultInvokerMgr implements InvokerMgr{
 
     public static volatile DefaultInvokerMgr INSTANCE;
 
-    private Invoker reqInvoker;
-    private Invoker respInvoker;
+    private Invoker oneWayInvoker;
+
+    private Invoker twoWayInvoker;
 
     public static DefaultInvokerMgr getInstance() {
         if ( null == INSTANCE) {
@@ -24,12 +25,13 @@ public class DefaultInvokerMgr implements InvokerMgr{
 
 
     @Override
-    public Invoker getReqInvoker() {
-        return reqInvoker == null ? getDefaultReqInvoker() : reqInvoker;
+    public Invoker getOneWayInvoker() {
+        return oneWayInvoker == null ? getDefaultOneWayInvoker() : oneWayInvoker;
     }
 
     @Override
-    public Invoker getRespInvoker() {
-        return respInvoker == null ? getDefaultRespInvoker() : respInvoker;
+    public Invoker getTwoWayInvoker() {
+        return twoWayInvoker == null ? getDefaultTwoWayInvoker() : twoWayInvoker;
     }
+
 }

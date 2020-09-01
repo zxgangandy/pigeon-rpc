@@ -1,5 +1,6 @@
 package io.andy.pigeon.net.core.message;
 
+
 public interface MsgFactory {
 
     Envelope createOneWay(Object requestObject);
@@ -11,4 +12,8 @@ public interface MsgFactory {
     Envelope createHeartbeatAck(Envelope req);
 
     Envelope createTwoWayAck(Envelope req, Object responseBody);
+
+    <T extends Envelope> T createReqTimeout(Envelope req);
+
+    <T extends Envelope> T createReqFailed(Envelope req);
 }

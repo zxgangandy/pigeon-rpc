@@ -1,5 +1,6 @@
 package io.andy.pigeon.net.core.message.invoker;
 
+
 /**
  */
 public interface Invoker<T, R> {
@@ -10,4 +11,6 @@ public interface Invoker<T, R> {
      * @return
      */
     R invoke(T req);
+
+
 }

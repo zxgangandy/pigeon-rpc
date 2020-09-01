@@ -9,6 +9,7 @@ import io.netty.channel.pool.AbstractChannelPoolMap;
 import io.netty.channel.pool.ChannelPoolHandler;
 import io.netty.channel.pool.FixedChannelPool;
 import io.netty.util.Timeout;
+import io.netty.util.Timer;
 import io.netty.util.TimerTask;
 import io.netty.util.concurrent.Future;
 import lombok.extern.slf4j.Slf4j;
@@ -23,16 +24,18 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class ClientConnectionMgr extends AbstractChannelPoolMap<InetSocketAddress, FixedChannelPool>  implements
         ConnectionMgr, ReconnectMgr {
     private static final int MAX_CONNS = 1;
-    private static final int TRTRY_COUNT = 3;
+    private static final int RETRY_COUNT = 10;
 
     private ChannelPoolHandler channelPoolHandler;
     private Bootstrap bootstrap;
+    private Timer reconnectTimer;
 
     private Map<Channel, Connection> connectionMap;
 
     public ClientConnectionMgr(Bootstrap bootstrap, ChannelPoolHandler channelPoolHandler) {
         this.bootstrap = bootstrap;
         this.channelPoolHandler = channelPoolHandler;
+        this.reconnectTimer = TimerHolder.getTimer();
 
         this.connectionMap = new ConcurrentHashMap<>();
     }
@@ -110,7 +113,7 @@ public class ClientConnectionMgr extends AbstractChannelPoolMap<InetSocketAddres
     @Override
     public void reconnect(Url url) {
         ReconnectTimerTask task = new ReconnectTimerTask(url);
-        TimerHolder.getTimer().newTimeout(task, task.getCount() * 3, TimeUnit.SECONDS);
+        reconnectTimer.newTimeout(task, task.getCount() * 3, TimeUnit.SECONDS);
     }
 
     private Connection getOrAddConnection(Channel ch, Url url) {
@@ -129,7 +132,6 @@ public class ClientConnectionMgr extends AbstractChannelPoolMap<InetSocketAddres
         }
         return ret;
     }
-
 
 
     private class ReconnectTimerTask implements TimerTask {
@@ -156,8 +158,12 @@ public class ClientConnectionMgr extends AbstractChannelPoolMap<InetSocketAddres
 
                 log.info("In reconnect timer, the connection={}", connection);
             } catch (Exception e) {
-                addCount();
-                log.error("reconnect to server url={}, error={}", url, e);
+                if (getCount() < RETRY_COUNT) {
+                    addCount();
+                    reconnectTimer.newTimeout(this, getCount() * 3, TimeUnit.SECONDS);
+                } else {
+                    log.warn("Reconnect to server cost max times={}", getCount());
+                }
             }
         }
     }
