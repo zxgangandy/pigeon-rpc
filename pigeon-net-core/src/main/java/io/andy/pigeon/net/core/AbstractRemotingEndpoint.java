@@ -68,7 +68,7 @@ public abstract class AbstractRemotingEndpoint implements RemotingEndpoint {
         return options.option(option);
     }
 
-    protected void sendOneWayMsg(final Connection conn, final Object request) {
+    protected void sendOneWayMsg(Connection conn, Object request) {
         Envelope envelope = msgFactory.createOneWay(request);
         try {
             conn.getChannel().writeAndFlush(envelope).addListener((ChannelFuture f) -> {
@@ -90,7 +90,7 @@ public abstract class AbstractRemotingEndpoint implements RemotingEndpoint {
     }
 
 
-    public void sendOneWayMsg(final Url url, final Object request) {
+    public void sendOneWayMsg(Url url, Object request) {
         Connection conn = connectionMgr.get(url);
         sendOneWayMsg(conn, request);
     }
@@ -125,24 +125,24 @@ public abstract class AbstractRemotingEndpoint implements RemotingEndpoint {
         RespMsg respMsg = future.get(putOptionGet(ClientOption.REQUEST_TIMEOUT));
         if (respMsg == null) {
             conn.removeInvokeFuture(requestId);
-            respMsg = msgFactory.createReqTimeout(envelope);
+            respMsg = msgFactory.createReqTimeout(envelope, new Throwable("Sync message timeout"));
         }
 
         return respMsg;
     }
 
-    protected RespMsg sendSyncMsg(final Url url, final Object request)  throws InterruptedException{
+    protected RespMsg sendSyncMsg(Url url, Object request)  throws InterruptedException{
         Connection conn = connectionMgr.get(url);
         return sendSyncMsg(conn, request);
     }
 
-    protected InvokeFuture sendAsyncMsg(final Url url, final Object request, final int timeoutMillis)  throws InterruptedException{
+    protected InvokeFuture sendAsyncMsg(Url url, Object request, int timeoutMillis)  throws InterruptedException{
         Connection conn = connectionMgr.get(url);
         return sendAsyncMsg(conn, request, timeoutMillis);
     }
 
 
-    public InvokeFuture sendAsyncMsg(final Connection conn, final Object request, final int timeoutMillis)  throws InterruptedException{
+    public InvokeFuture sendAsyncMsg(Connection conn, Object request, int timeoutMillis)  throws InterruptedException{
         Envelope envelope = msgFactory.createTwoWay(request);
         final long requestId = envelope.getReqId();
         final InvokeFuture future = new DefaultInvokeFuture(requestId);
@@ -153,7 +153,7 @@ public abstract class AbstractRemotingEndpoint implements RemotingEndpoint {
             public void run(Timeout timeout) throws Exception {
                 InvokeFuture future = conn.removeInvokeFuture(requestId);
                 if (future != null) {
-                    future.complete(msgFactory.createReqTimeout(envelope));
+                    future.complete(msgFactory.createReqTimeout(envelope, new Throwable("Async message timeout")));
                 }
             }
 
@@ -186,6 +186,5 @@ public abstract class AbstractRemotingEndpoint implements RemotingEndpoint {
 
         return future;
     }
-
 
 }

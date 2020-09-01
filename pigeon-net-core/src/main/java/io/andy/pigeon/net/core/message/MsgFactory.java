@@ -13,7 +13,7 @@ public interface MsgFactory {
 
     <T extends Envelope> T createTwoWayAck(Envelope req, Object responseBody);
 
-    <T extends Envelope> T createReqTimeout(Envelope req);
+    <T extends Envelope> T createReqTimeout(Envelope req, Object responseBody);
 
     <T extends Envelope> T createReqFailed(Envelope req, Object responseBody);
 }
