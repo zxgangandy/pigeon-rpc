@@ -11,7 +11,7 @@ public interface MsgFactory {
 
     Envelope createHeartbeatAck(Envelope req);
 
-    Envelope createTwoWayAck(Envelope req, Object responseBody);
+    <T extends Envelope> T createTwoWayAck(Envelope req, Object responseBody);
 
     <T extends Envelope> T createReqTimeout(Envelope req);
 

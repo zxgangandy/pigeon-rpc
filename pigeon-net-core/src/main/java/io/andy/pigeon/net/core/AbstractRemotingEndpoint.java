@@ -52,19 +52,6 @@ public abstract class AbstractRemotingEndpoint implements RemotingEndpoint {
         throw new StartException("The node has shutdown");
     }
 
-    //    @Override
-//    public <T> RemotingEndpoint option(Option<T> option, T value) {
-//        ObjectUtil.checkNotNull(option, "option");
-//        this.options.option(option, value);
-//        return this;
-//    }
-//
-//    @Override
-//    public <T> T option(Option<T> option) {
-//        return options.option(option);
-//    }
-
-//
     @Override
     public <T> RemotingEndpoint config(Option<T> option, T value) {
         ObjectUtil.checkNotNull(option, "option");
@@ -76,19 +63,6 @@ public abstract class AbstractRemotingEndpoint implements RemotingEndpoint {
     public <T> T putOptionGet(Option<T> option) {
         return options.option(option);
     }
-
-
-//    @Override
-//    public <T> B config(Option<T> option, Object value) {
-//        ObjectUtil.checkNotNull(option, "option");
-//        this.options.option(option, value);
-//        return this;
-//    }
-//
-//    @Override
-//    public <T> T putOptionGet(Option<T>  option) {
-//        return options.option(option);
-//    }
 
     protected void sendOneWayMsg(final Connection conn, final Object request) {
         Envelope envelope = msgFactory.createOneWay(request);

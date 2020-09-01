@@ -1,10 +1,7 @@
 package io.andy.pigeon.net.core.message.processor;
 
 import io.andy.pigeon.net.core.connection.Connection;
-import io.andy.pigeon.net.core.message.DefaultMsgFactory;
-import io.andy.pigeon.net.core.message.Envelope;
-import io.andy.pigeon.net.core.message.ReqMsg;
-import io.andy.pigeon.net.core.message.RespMsg;
+import io.andy.pigeon.net.core.message.*;
 import io.andy.pigeon.net.core.message.invoker.DefaultInvokerMgr;
 import io.andy.pigeon.net.core.message.invoker.InvokeFuture;
 import io.andy.pigeon.net.core.message.invoker.Invoker;
@@ -19,9 +16,13 @@ public class DefaultMsgProcessor implements MsgProcessor {
     private Invoker oneWayInvoker;
     private Invoker twoWayInvoker;
 
+    private MsgFactory msgFactory;
+
     public DefaultMsgProcessor() {
         this.oneWayInvoker = DefaultInvokerMgr.getInstance().getOneWayInvoker();
         this.twoWayInvoker = DefaultInvokerMgr.getInstance().getTwoWayInvoker();
+
+        this.msgFactory = DefaultMsgFactory.getInstance();
     }
 
     @Override
@@ -48,13 +49,38 @@ public class DefaultMsgProcessor implements MsgProcessor {
     }
 
     private void processOneWayReq(Envelope req) {
-        ReqMsg reqMsg = deserializeReqMsg(req);
+        ReqMsg reqMsg;
+        try {
+            reqMsg = deserializeReqMsg(req);
+        } catch (Throwable e) {
+            return;
+        }
         oneWayInvoker.invoke(reqMsg);
     }
 
     private void processTwoWayReq(final ChannelHandlerContext ctx, Envelope req) {
-        ReqMsg reqMsg = deserializeReqMsg(req);
-        RespMsg respMsg = (RespMsg) twoWayInvoker.invoke(reqMsg);
+        ReqMsg reqMsg = null;
+        boolean deserializeFailed = false;
+        Throwable throwable = null;
+
+        try {
+            reqMsg = deserializeReqMsg(req);
+        } catch (Throwable e) {
+            e.printStackTrace();
+            deserializeFailed = true;
+            throwable = e;
+        }
+
+        RespMsg respMsg;
+        if (deserializeFailed) {
+            respMsg = msgFactory.createTwoWayAck(req, throwable);
+        } else {
+            try {
+                respMsg = (RespMsg) twoWayInvoker.invoke(reqMsg);
+            } catch (Throwable th) {
+                respMsg = msgFactory.createTwoWayAck(req, th);
+            }
+        }
 
         ctx.writeAndFlush(respMsg).addListener((ChannelFuture future) -> {
             if (future.isSuccess()) {
@@ -70,7 +96,14 @@ public class DefaultMsgProcessor implements MsgProcessor {
     }
 
     private void processTwoWayResp(final ChannelHandlerContext ctx, Envelope req) {
-        RespMsg respMsg = deserializeRespMsg(req);
+        RespMsg respMsg;
+        try {
+            respMsg = deserializeRespMsg(req);
+        } catch (Throwable e) {
+            e.printStackTrace();
+            respMsg = msgFactory.createTwoWayAck(req, e);
+        }
+
         Connection conn = ctx.channel().attr(Connection.CONNECTION).get();
         InvokeFuture future = conn.removeInvokeFuture(req.getReqId());
 

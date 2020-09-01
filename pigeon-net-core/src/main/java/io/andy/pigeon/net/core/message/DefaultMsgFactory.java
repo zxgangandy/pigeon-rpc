@@ -67,7 +67,7 @@ public class DefaultMsgFactory implements MsgFactory {
     }
 
     @Override
-    public Envelope createTwoWayAck(Envelope req, Object responseBody) {
+    public RespMsg createTwoWayAck(Envelope req, Object responseBody) {
         RespMsg  envelope =  new RespMsg(responseBody);
 
         envelope.setType(MsgType.ACK_TWO_WAY.getType())

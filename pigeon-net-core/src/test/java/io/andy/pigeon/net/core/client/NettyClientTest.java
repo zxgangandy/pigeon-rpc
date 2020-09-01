@@ -3,6 +3,8 @@ package io.andy.pigeon.net.core.client;
 import io.andy.pigeon.net.core.Pigeon;
 import io.andy.pigeon.net.core.config.ClientOption;
 
+import static io.andy.pigeon.net.core.config.ClientOption.CONNECT_TIMEOUT;
+
 //@RunWith(JUnit4.class)
 public class NettyClientTest {
 //    NettyClient client;
@@ -37,7 +39,7 @@ public class NettyClientTest {
         Pigeon.with(NettyClient.class)
                 .serverIp("127.0.0.1")
                 .serverPort(8500)
-                .config(ClientOption.CONNECT_TIMEOUT, 3000)
+                .config(CONNECT_TIMEOUT, 3000)
                 .start()
                 .oneWayRequest("hello");
 
