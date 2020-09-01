@@ -1,6 +1,7 @@
 package io.andy.pigeon.net.core.client;
 
 import io.andy.pigeon.net.core.AbstractRemotingEndpoint;
+import io.andy.pigeon.net.core.Url;
 import io.andy.pigeon.net.core.codec.message.DefaultMsgCodecFactory;
 import io.andy.pigeon.net.core.codec.message.MsgCodecFactory;
 import io.andy.pigeon.net.core.codec.NettyDecoder;
@@ -11,6 +12,7 @@ import io.andy.pigeon.net.core.exception.StartException;
 import io.andy.pigeon.net.core.handler.NettyMessageHandler;
 import io.andy.pigeon.net.core.utils.NamedThreadFactory;
 import io.andy.pigeon.net.core.utils.NettyEventLoopUtil;
+import io.andy.pigeon.net.core.utils.StringUtils;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.*;
 import io.netty.channel.pool.ChannelPoolHandler;
@@ -34,6 +36,8 @@ public abstract class AbstractClientEndpoint extends AbstractRemotingEndpoint {
     private MsgCodecFactory codecFactory;
 
     private Bootstrap bootstrap;
+
+    protected Url serverUrl;
 
     @Override
     public AbstractClientEndpoint start() {
@@ -97,6 +101,12 @@ public abstract class AbstractClientEndpoint extends AbstractRemotingEndpoint {
     protected void checkStarted() {
         if (!started()) {
             throw new StartException(String.format("Client has not been started yet!"));
+        }
+    }
+
+    protected void checkServerUrl() {
+        if (StringUtils.isNotEmpty(this.serverIp) && this.serverPort > 0) {
+            serverUrl = new Url(serverIp, serverPort);
         }
     }
 
