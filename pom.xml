@@ -21,6 +21,14 @@
         </snapshotRepository>
     </distributionManagement>
 
+    <developers>
+        <developer>
+            <name>liuzhiwen</name>
+            <email>524409188@qq.com</email>
+            <url>https://github.com/zxgangandy/pigeon-rpc</url>
+        </developer>
+    </developers>
+
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
@@ -81,6 +89,7 @@
         </dependency>
     </dependencies>
     <profiles>
+
         <profile>
             <id>release</id>
             <build>
