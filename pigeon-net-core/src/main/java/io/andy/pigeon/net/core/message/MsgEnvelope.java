@@ -22,7 +22,7 @@ public class MsgEnvelope implements Envelope{
 
     /**
      * 请求模式 1 byte
-     * 0x01 - req - oneWay
+     * 0x01 - req - oneWayRequest
      * 0x02 - req - twoWay
      * 0x03 - resp
      * 0x04 - Heartbeat req

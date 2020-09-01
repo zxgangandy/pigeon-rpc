@@ -1,4 +1,4 @@
-package io.andy.pigeon.net.core.base;
+package io.andy.pigeon.net.core;
 
 import lombok.Builder;
 import lombok.Data;

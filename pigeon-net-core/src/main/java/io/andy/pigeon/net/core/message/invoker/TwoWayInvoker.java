@@ -7,7 +7,7 @@ import io.andy.pigeon.net.core.message.RespMsg;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class DefaultReqInvoker implements Invoker<ReqMsg, RespMsg> {
+public class TwoWayInvoker implements Invoker<ReqMsg, RespMsg> {
 
 
     @Override

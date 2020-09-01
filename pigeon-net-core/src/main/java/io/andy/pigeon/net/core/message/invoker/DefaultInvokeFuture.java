@@ -5,26 +5,30 @@ import io.andy.pigeon.net.core.message.Envelope;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
-public class DefaultInvokeFuture implements InvokeFuture<Envelope> {
+public class DefaultInvokeFuture implements InvokeFuture {
 
     private final CountDownLatch countDownLatch = new CountDownLatch(1);
 
     private volatile Envelope responseEnvelope;
 
-    public DefaultInvokeFuture() {
+    private long invokeId;
 
+
+
+    public DefaultInvokeFuture(long invokeId) {
+        this.invokeId = invokeId;
     }
 
     @Override
-    public Envelope get(long timeoutMillis) throws InterruptedException {
+    public <T> T get(long timeoutMillis) throws InterruptedException {
         this.countDownLatch.await(timeoutMillis, TimeUnit.MILLISECONDS);
-        return this.responseEnvelope;
+        return (T) this.responseEnvelope;
     }
 
     @Override
-    public Envelope get() throws InterruptedException {
+    public <T> T get() throws InterruptedException {
         this.countDownLatch.await();
-        return this.responseEnvelope;
+        return (T) this.responseEnvelope;
     }
 
     @Override
@@ -33,9 +37,14 @@ public class DefaultInvokeFuture implements InvokeFuture<Envelope> {
     }
 
     @Override
-    public void complete(Envelope envelope) {
-        this.responseEnvelope = envelope;
+    public <T> void complete(T envelope) {
+        this.responseEnvelope = (Envelope) envelope;
         this.countDownLatch.countDown();
+    }
+
+    @Override
+    public long invokeId() {
+        return invokeId;
     }
 
 

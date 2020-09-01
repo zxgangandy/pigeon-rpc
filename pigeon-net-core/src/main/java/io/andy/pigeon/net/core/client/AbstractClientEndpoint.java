@@ -1,12 +1,13 @@
 package io.andy.pigeon.net.core.client;
 
-import io.andy.pigeon.net.core.base.AbstractRemotingEndpoint;
+import io.andy.pigeon.net.core.AbstractRemotingEndpoint;
 import io.andy.pigeon.net.core.codec.message.DefaultMsgCodecFactory;
 import io.andy.pigeon.net.core.codec.message.MsgCodecFactory;
 import io.andy.pigeon.net.core.codec.NettyDecoder;
 import io.andy.pigeon.net.core.codec.NettyEncoder;
 import io.andy.pigeon.net.core.connection.ClientConnectionMgr;
 import io.andy.pigeon.net.core.constant.Constants;
+import io.andy.pigeon.net.core.exception.StartException;
 import io.andy.pigeon.net.core.handler.NettyMessageHandler;
 import io.andy.pigeon.net.core.utils.NamedThreadFactory;
 import io.andy.pigeon.net.core.utils.NettyEventLoopUtil;
@@ -26,32 +27,38 @@ public abstract class AbstractClientEndpoint extends AbstractRemotingEndpoint {
             Runtime.getRuntime().availableProcessors() + 1,
             new NamedThreadFactory("netty-client-worker", true));
 
+    protected String serverIp;
+
+    protected int serverPort;
+
     private MsgCodecFactory codecFactory;
-    //protected BaseMsgEmitter msgEmitter;
 
     private Bootstrap bootstrap;
 
     @Override
-    public void start() {
+    public AbstractClientEndpoint start() {
+        super.start();
+
         initialize();
 
-        this.codecFactory = new DefaultMsgCodecFactory();
-        this.connectionMgr = new ClientConnectionMgr(bootstrap, getChannelPoolHandler());
-        //this.msgEmitter = new ClientMsgEmitter(connectionMgr);
+        return this;
     }
 
     @Override
     public void stop() {
-
+        super.stop();
     }
 
     private void initialize() {
-        bootstrap = new Bootstrap();
-        bootstrap.group(workerGroup)
+        this.bootstrap = new Bootstrap();
+        this.bootstrap.group(workerGroup)
                 .channel(NioSocketChannel.class)
                 .option(ChannelOption.TCP_NODELAY, true)
                 .option(ChannelOption.SO_REUSEADDR, true)
                 .option(ChannelOption.SO_KEEPALIVE, true);
+
+        this.codecFactory = new DefaultMsgCodecFactory();
+        this.connectionMgr = new ClientConnectionMgr(bootstrap, getChannelPoolHandler());
     }
 
     private ChannelPoolHandler getChannelPoolHandler() {
@@ -86,4 +93,11 @@ public abstract class AbstractClientEndpoint extends AbstractRemotingEndpoint {
             }
         };
     }
+
+    protected void checkStarted() {
+        if (!started()) {
+            throw new StartException(String.format("Client has not been started yet!"));
+        }
+    }
+
 }
