@@ -3,7 +3,9 @@ pigeon-rpc
 
 pigeon-rpc是一款基于Netty的可以支持百万级别的并发连接的高性能、高度可扩展的的网络通讯框架，主要参考了sofa-bolt的网络通讯模块的设计，
 pigeon-rpc可以使用在IM、长连接等领域，也可以在其基础上开发rpc框架。它具有以下的特性：
-
+- simple design
+  - 业务通信层：message->dispatcher->processor->invoker
+  - 链接管理层：event->dispatcher->processor->listener
 - 私有的通讯协议
   - 可定制的编/解码器
   - 支持多种序列化机制
