@@ -13,10 +13,14 @@ import io.andy.pigeon.net.core.message.RespMsg;
 import io.andy.pigeon.net.core.message.invoker.DefaultInvokeFuture;
 import io.andy.pigeon.net.core.message.invoker.InvokeFuture;
 import io.andy.pigeon.net.core.utils.RemotingUtil;
+import io.andy.pigeon.net.core.utils.TimerHolder;
 import io.netty.channel.ChannelFuture;
+import io.netty.util.Timeout;
+import io.netty.util.TimerTask;
 import io.netty.util.internal.ObjectUtil;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 @Slf4j
@@ -101,7 +105,7 @@ public abstract class AbstractRemotingEndpoint implements RemotingEndpoint {
             conn.getChannel().writeAndFlush(envelope).addListener((ChannelFuture f) -> {
                 if (!f.isSuccess()) {
                     conn.removeInvokeFuture(requestId);
-                    future.complete(msgFactory.createReqFailed(envelope));
+                    future.complete(msgFactory.createReqFailed(envelope, f.cause()));
 
                     log.error("Two way send failed. The address is {}",
                             RemotingUtil.parseRemoteAddress(conn.getChannel()), f.cause());
@@ -111,7 +115,7 @@ public abstract class AbstractRemotingEndpoint implements RemotingEndpoint {
             });
         } catch (Exception e) {
             conn.removeInvokeFuture(requestId);
-            future.complete(msgFactory.createReqFailed(envelope));
+            future.complete(msgFactory.createReqFailed(envelope, e));
 
             log.error("Exception caught when sending invocation. The address is {}",
                     RemotingUtil.parseRemoteAddress(conn.getChannel()), e);
@@ -132,6 +136,56 @@ public abstract class AbstractRemotingEndpoint implements RemotingEndpoint {
         return sendSyncMsg(conn, request);
     }
 
+    protected InvokeFuture sendAsyncMsg(final Url url, final Object request, final int timeoutMillis)  throws InterruptedException{
+        Connection conn = connectionMgr.get(url);
+        return sendAsyncMsg(conn, request, timeoutMillis);
+    }
+
+
+    public InvokeFuture sendAsyncMsg(final Connection conn, final Object request, final int timeoutMillis)  throws InterruptedException{
+        Envelope envelope = msgFactory.createTwoWay(request);
+        final long requestId = envelope.getReqId();
+        final InvokeFuture future = new DefaultInvokeFuture(requestId);
+        conn.addInvokeFuture(future);
+
+        Timeout timeout = TimerHolder.getTimer().newTimeout(new TimerTask() {
+            @Override
+            public void run(Timeout timeout) throws Exception {
+                InvokeFuture future = conn.removeInvokeFuture(requestId);
+                if (future != null) {
+                    future.complete(msgFactory.createReqTimeout(envelope));
+                }
+            }
+
+        }, timeoutMillis, TimeUnit.MILLISECONDS);
+        future.addTimeout(timeout);
+
+        try {
+            conn.getChannel().writeAndFlush(envelope).addListener((ChannelFuture f) -> {
+                if (!f.isSuccess()) {
+                    InvokeFuture invokeFuture = conn.removeInvokeFuture(requestId);
+                    if (invokeFuture != null) {
+                        invokeFuture.cancelTimeout();
+                        invokeFuture.complete(msgFactory.createReqFailed(envelope, f.cause()));
+                    }
+
+                    log.error("Two way async send failed. The address is {}",
+                            RemotingUtil.parseRemoteAddress(conn.getChannel()), f.cause());
+                } else {
+                    log.debug("Two way async send success!!");
+                }
+            });
+        } catch (Exception e) {
+            conn.removeInvokeFuture(requestId);
+            future.complete(msgFactory.createReqFailed(envelope, e));
+
+            log.error("Exception caught when sending invocation. The address is {}",
+                    RemotingUtil.parseRemoteAddress(conn.getChannel()), e);
+
+        }
+
+        return future;
+    }
 
 
 }

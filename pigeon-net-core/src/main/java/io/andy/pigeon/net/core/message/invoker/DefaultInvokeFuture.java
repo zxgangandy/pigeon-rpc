@@ -1,6 +1,7 @@
 package io.andy.pigeon.net.core.message.invoker;
 
 import io.andy.pigeon.net.core.message.Envelope;
+import io.netty.util.Timeout;
 
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
@@ -12,6 +13,8 @@ public class DefaultInvokeFuture implements InvokeFuture {
     private volatile Envelope responseEnvelope;
 
     private long invokeId;
+
+    private Timeout timeout;
 
 
 
@@ -45,6 +48,18 @@ public class DefaultInvokeFuture implements InvokeFuture {
     @Override
     public long invokeId() {
         return invokeId;
+    }
+
+    @Override
+    public void addTimeout(Timeout timeout) {
+        this.timeout = timeout;
+    }
+
+    @Override
+    public void cancelTimeout() {
+        if (this.timeout != null) {
+            this.timeout.cancel();
+        }
     }
 
 

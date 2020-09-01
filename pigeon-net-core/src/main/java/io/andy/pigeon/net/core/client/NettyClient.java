@@ -1,9 +1,9 @@
 package io.andy.pigeon.net.core.client;
 
 import io.andy.pigeon.net.core.config.Option;
-import io.andy.pigeon.net.core.connection.Connection;
 import io.andy.pigeon.net.core.Url;
 import io.andy.pigeon.net.core.message.RespMsg;
+import io.andy.pigeon.net.core.message.invoker.InvokeFuture;
 import io.netty.util.internal.ObjectUtil;
 import lombok.extern.slf4j.Slf4j;
 
@@ -34,18 +34,15 @@ public class NettyClient extends AbstractClientEndpoint {
         return this;
     }
 
-    public void oneWayRequest(final Connection conn, final Object request) {
-        sendOneWayMsg(conn, request);
-    }
-
     public void oneWayRequest(final Object request) {
         checkStarted();
         Url url = new Url(serverIp, serverPort);
         sendOneWayMsg(url, request);
     }
 
-    public RespMsg syncRequest(final Url url, final Object request)  {
+    public RespMsg twoWayRequest(final Object request)  {
         checkStarted();
+        Url url = new Url(serverIp, serverPort);
         try {
             return sendSyncMsg(url, request);
         } catch (InterruptedException e) {
@@ -54,10 +51,11 @@ public class NettyClient extends AbstractClientEndpoint {
         }
     }
 
-    public RespMsg asyncRequest(final Url url, final Object request)  {
+    public InvokeFuture twoWayRequest(final Object request, final int timeoutMillis)  {
         checkStarted();
+        Url url = new Url(serverIp, serverPort);
         try {
-            return sendSyncMsg(url, request);
+            return sendAsyncMsg(url, request, timeoutMillis);
         } catch (InterruptedException e) {
             e.printStackTrace();
             return null;

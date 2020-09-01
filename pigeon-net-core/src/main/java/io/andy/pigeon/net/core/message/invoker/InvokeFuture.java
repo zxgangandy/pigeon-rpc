@@ -1,6 +1,8 @@
 package io.andy.pigeon.net.core.message.invoker;
 
 
+import io.netty.util.Timeout;
+
 public interface InvokeFuture {
     /**
      * Wait response with timeout.
@@ -27,4 +29,14 @@ public interface InvokeFuture {
     <V> void complete(V v);
 
     long invokeId();
+
+    /**
+     * Add timeout for the future.
+     */
+    void addTimeout(Timeout timeout);
+
+    /**
+     * Cancel the timeout.
+     */
+    void cancelTimeout();
 }

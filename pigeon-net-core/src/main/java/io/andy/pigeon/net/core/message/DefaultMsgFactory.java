@@ -91,8 +91,8 @@ public class DefaultMsgFactory implements MsgFactory {
     }
 
     @Override
-    public RespMsg createReqFailed(Envelope req) {
-        RespMsg  envelope =  new RespMsg(null);
+    public RespMsg createReqFailed(Envelope req, Object responseBody) {
+        RespMsg  envelope =  new RespMsg(responseBody);
 
         envelope.setType(MsgType.ACK_TWO_WAY.getType())
                 .setCodec(CodecType.PROTO_STUFF.getType())
