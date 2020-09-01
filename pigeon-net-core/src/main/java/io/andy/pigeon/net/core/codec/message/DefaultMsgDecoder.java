@@ -33,7 +33,7 @@ public class DefaultMsgDecoder implements MsgDecoder{
             return;
         }
 
-        byte[] header = new byte[Math.min(readable, MIN_ENVELOPE_BYTES)];
+        byte[] header = new byte[MIN_ENVELOPE_BYTES];
         in.readBytes(header);
         byte magic = headerDecoder.getMagic(header);
 
