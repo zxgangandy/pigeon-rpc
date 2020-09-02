@@ -9,7 +9,7 @@ public class DefaultMsgDecoder implements MsgDecoder{
 
     private int MIN_ENVELOPE_BYTES = envelopSize(0);
 
-    public int envelopSize(int extraLength) {
+    private int envelopSize(int extraLength) {
         return getMsgHeaderSize() + extraLength;
     }
 
@@ -21,10 +21,6 @@ public class DefaultMsgDecoder implements MsgDecoder{
 
     @Override
     public void decode(ByteBuf in, List<Object> out) {
-        decodeByteBuf(in, out);
-    }
-
-    private void decodeByteBuf(ByteBuf in, List<Object> out) {
         int readable = in.readableBytes();
         int saveReadIndex = in.readerIndex();
 
@@ -52,6 +48,9 @@ public class DefaultMsgDecoder implements MsgDecoder{
         }
     }
 
+    /**
+     *  decode message envelop(header and extra: clazz, body)
+     */
     private MsgEnvelope decodeMsg(ByteBuf in, byte[] header, byte magic, short clazzLength, int bodyLength) {
         MsgEnvelope msg = new MsgEnvelope();
         msg.setMagic(magic);
@@ -61,24 +60,26 @@ public class DefaultMsgDecoder implements MsgDecoder{
         msg.setBodyLength(bodyLength);
         msg.setClazzLength(clazzLength);
 
-        setClazzAndBodyIfNecessary(in, msg);
+        if (msg.getBodyLength() <= 0) {
+            return msg;
+        }
+
+        decodeExtraIfNecessary(in, msg);
 
         return msg;
     }
 
-    private void setClazzAndBodyIfNecessary(ByteBuf in, MsgEnvelope msg) {
-        if (msg.getBodyLength() > 0) {
-            byte[] clazz = new byte[msg.getClazzLength()];
-            in.readBytes(clazz);
-            msg.setClazz(clazz);
+    private static void decodeExtraIfNecessary(ByteBuf in, MsgEnvelope msg) {
+        byte[] clazz = new byte[msg.getClazzLength()];
+        in.readBytes(clazz);
+        msg.setClazz(clazz);
 
-            byte[] body = new byte[msg.getBodyLength()];
-            in.readBytes(body);
-            msg.setBody(body);
-        }
+        byte[] body = new byte[msg.getBodyLength()];
+        in.readBytes(body);
+        msg.setBody(body);
     }
 
-    private boolean isMagicValid(byte magicValue)  {
+    private static boolean isMagicValid(byte magicValue)  {
         return magicValue == MAGIC;
     }
 
