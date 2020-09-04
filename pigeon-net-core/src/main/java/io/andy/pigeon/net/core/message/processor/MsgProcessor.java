@@ -1,16 +1,12 @@
 package io.andy.pigeon.net.core.message.processor;
 
-import io.andy.pigeon.net.core.message.Envelope;
-import io.andy.pigeon.net.core.message.MsgEnvelope;
-import io.andy.pigeon.net.core.message.ReqMsg;
-import io.andy.pigeon.net.core.message.RespMsg;
+import io.andy.pigeon.net.core.message.*;
 import io.andy.pigeon.net.core.utils.ProtoStuffUtils;
-import io.netty.channel.ChannelHandlerContext;
 import org.springframework.beans.BeanUtils;
 
 public interface MsgProcessor {
 
-    void process(final ChannelHandlerContext ctx, Envelope req);
+    void process(MsgContext context, Envelope req);
 
     default ReqMsg deserializeReqMsg(Envelope req) throws Throwable {
         MsgEnvelope envelope = (MsgEnvelope) req;

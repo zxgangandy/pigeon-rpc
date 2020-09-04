@@ -14,9 +14,7 @@ import io.andy.pigeon.net.core.message.invoker.DefaultInvokeFuture;
 import io.andy.pigeon.net.core.message.invoker.InvokeFuture;
 import io.andy.pigeon.net.core.utils.RemotingUtil;
 import io.andy.pigeon.net.core.utils.TimerHolder;
-import io.netty.channel.ChannelFuture;
 import io.netty.util.Timeout;
-import io.netty.util.TimerTask;
 import io.netty.util.internal.ObjectUtil;
 import lombok.extern.slf4j.Slf4j;
 
@@ -24,6 +22,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 @Slf4j
+@SuppressWarnings("Duplicates")
 public abstract class AbstractRemotingEndpoint implements RemotingEndpoint {
 
     private AtomicBoolean start = new AtomicBoolean(false);
@@ -71,14 +70,7 @@ public abstract class AbstractRemotingEndpoint implements RemotingEndpoint {
     protected void sendOneWayMsg(Connection conn, Object request) {
         Envelope envelope = msgFactory.createOneWay(request);
         try {
-            conn.getChannel().writeAndFlush(envelope).addListener((ChannelFuture f) -> {
-                if (!f.isSuccess()) {
-                    log.error("One way send failed. The address is {}",
-                            RemotingUtil.parseRemoteAddress(conn.getChannel()), f.cause());
-                } else {
-                    log.info("One way send success!!");
-                }
-            });
+            conn.sendMsg(envelope);
         } catch (Exception e) {
             if (null == conn) {
                 log.error("Conn is null");
@@ -102,15 +94,19 @@ public abstract class AbstractRemotingEndpoint implements RemotingEndpoint {
         conn.addInvokeFuture(future);
 
         try {
-            conn.getChannel().writeAndFlush(envelope).addListener((ChannelFuture f) -> {
-                if (!f.isSuccess()) {
+            conn.sendMsg(envelope, new Connection.SendMsgCallback() {
+                @Override
+                public void onSuccess() {
+                    log.debug("Two way send success!!");
+                }
+
+                @Override
+                public void onFailed(Throwable throwable) {
                     conn.removeInvokeFuture(requestId);
-                    future.complete(msgFactory.createReqFailed(envelope, f.cause()));
+                    future.complete(msgFactory.createReqFailed(envelope, throwable));
 
                     log.error("Two way send failed. The address is {}",
-                            RemotingUtil.parseRemoteAddress(conn.getChannel()), f.cause());
-                } else {
-                    log.debug("Two way send success!!");
+                            RemotingUtil.parseRemoteAddress(conn.getChannel()), throwable);
                 }
             });
         } catch (Exception e) {
@@ -148,31 +144,35 @@ public abstract class AbstractRemotingEndpoint implements RemotingEndpoint {
         final InvokeFuture future = new DefaultInvokeFuture(requestId);
         conn.addInvokeFuture(future);
 
-        Timeout timeout = TimerHolder.getTimer().newTimeout(new TimerTask() {
-            @Override
-            public void run(Timeout timeout) throws Exception {
-                InvokeFuture future = conn.removeInvokeFuture(requestId);
-                if (future != null) {
-                    future.complete(msgFactory.createReqTimeout(envelope, new Throwable("Async message timeout")));
-                }
-            }
+        Timeout timeout = TimerHolder.getTimer().newTimeout(
+                (Timeout t) -> {
+                    InvokeFuture f = conn.removeInvokeFuture(requestId);
+                    if (f != null) {
+                        f.complete(msgFactory.createReqTimeout(envelope, new Throwable("Async message timeout")));
+                    }
+                },
+                timeoutMillis,
+                TimeUnit.MILLISECONDS);
 
-        }, timeoutMillis, TimeUnit.MILLISECONDS);
         future.addTimeout(timeout);
 
         try {
-            conn.getChannel().writeAndFlush(envelope).addListener((ChannelFuture f) -> {
-                if (!f.isSuccess()) {
+            conn.sendMsg(envelope, new Connection.SendMsgCallback() {
+                @Override
+                public void onSuccess() {
+                    log.debug("Two way async send success!!");
+                }
+
+                @Override
+                public void onFailed(Throwable throwable) {
                     InvokeFuture invokeFuture = conn.removeInvokeFuture(requestId);
                     if (invokeFuture != null) {
                         invokeFuture.cancelTimeout();
-                        invokeFuture.complete(msgFactory.createReqFailed(envelope, f.cause()));
+                        invokeFuture.complete(msgFactory.createReqFailed(envelope, throwable));
                     }
 
                     log.error("Two way async send failed. The address is {}",
-                            RemotingUtil.parseRemoteAddress(conn.getChannel()), f.cause());
-                } else {
-                    log.debug("Two way async send success!!");
+                            RemotingUtil.parseRemoteAddress(conn.getChannel()), throwable);
                 }
             });
         } catch (Exception e) {

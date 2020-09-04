@@ -2,100 +2,74 @@ package io.andy.pigeon.net.core.message.processor;
 
 import io.andy.pigeon.net.core.connection.Connection;
 import io.andy.pigeon.net.core.message.*;
-import io.andy.pigeon.net.core.message.invoker.DefaultInvokerMgr;
-import io.andy.pigeon.net.core.message.invoker.InvokeFuture;
-import io.andy.pigeon.net.core.message.invoker.Invoker;
+import io.andy.pigeon.net.core.message.invoker.*;
 import io.andy.pigeon.net.core.utils.RemotingUtil;
-import io.netty.channel.ChannelFuture;
-import io.netty.channel.ChannelHandlerContext;
 import lombok.extern.slf4j.Slf4j;
+
+import java.util.Objects;
+
+import static io.andy.pigeon.net.core.message.MsgType.REQ_TWO_WAY;
 
 
 @Slf4j
 public class DefaultMsgProcessor implements MsgProcessor {
-    private Invoker oneWayInvoker;
-    private Invoker twoWayInvoker;
+    private Invoker invoker;
 
     private MsgFactory msgFactory;
 
     public DefaultMsgProcessor() {
-        this.oneWayInvoker = DefaultInvokerMgr.getInstance().getOneWayInvoker();
-        this.twoWayInvoker = DefaultInvokerMgr.getInstance().getTwoWayInvoker();
+        this.invoker = DefaultInvokerMgr.getInstance().getInvoker();
+
+        Objects.requireNonNull(invoker, "Invoker not initialized");
 
         this.msgFactory = DefaultMsgFactory.getInstance();
     }
 
     @Override
-    public void process(final ChannelHandlerContext ctx, Envelope message) {
+    public void process(MsgContext context, Envelope message) {
+        Connection connection = context.getConnection();
 
         switch (message.getMsgType()) {
             case REQ_ONE_WAY:
-                processOneWayReq(message);
-                break;
             case REQ_TWO_WAY:
-                processTwoWayReq(ctx, message);
+                processReqMessage(context, message);
                 break;
             case ACK_TWO_WAY:
-                processTwoWayResp(ctx, message);
+                processTwoWayAck(connection, message);
                 break;
             case REQ_HEARTBEAT:
-                processHeartbeatReq(ctx, message);
+                processHeartbeatReq(connection, message);
                 break;
             case ACK_HEARTBEAT:
                 log.info("Received heartbeat ack message={}, remoteAddr={}",
-                        message, RemotingUtil.parseRemoteAddress(ctx.channel()));
+                        message, RemotingUtil.parseRemoteAddress(connection.getChannel()));
                 break;
         }
     }
 
-    private void processOneWayReq(Envelope req) {
+
+    /**
+     *  process request message（including one,two way request）
+     */
+    private void processReqMessage(MsgContext context, Envelope message) {
         ReqMsg reqMsg;
+        Connection connection = context.getConnection();
         try {
-            reqMsg = deserializeReqMsg(req);
-        } catch (Throwable e) {
+            reqMsg = deserializeReqMsg(message);
+        } catch (Throwable th) {
+            sendAckIfNecessary(connection, message, th);
             return;
         }
-        oneWayInvoker.invoke(reqMsg);
-    }
-
-    private void processTwoWayReq(final ChannelHandlerContext ctx, Envelope req) {
-        ReqMsg reqMsg = null;
-        boolean deserializeFailed = false;
-        Throwable throwable = null;
 
         try {
-            reqMsg = deserializeReqMsg(req);
-        } catch (Throwable e) {
-            e.printStackTrace();
-            deserializeFailed = true;
-            throwable = e;
+            Object respObj = invoker.invoke(context, reqMsg);
+            sendAckIfNecessary(connection, message, respObj);
+        } catch (Throwable th) {
+            sendAckIfNecessary(connection, message, th);
         }
-
-        RespMsg respMsg;
-        if (deserializeFailed) {
-            respMsg = msgFactory.createTwoWayAck(req, throwable);
-        } else {
-            try {
-                respMsg = (RespMsg) twoWayInvoker.invoke(reqMsg);
-            } catch (Throwable th) {
-                respMsg = msgFactory.createTwoWayAck(req, th);
-            }
-        }
-
-        ctx.writeAndFlush(respMsg).addListener((ChannelFuture future) -> {
-            if (future.isSuccess()) {
-                if (log.isDebugEnabled()) {
-                    log.debug("Send two way ack done! , to remoteAddr={}",
-                            RemotingUtil.parseRemoteAddress(ctx.channel()));
-                }
-            } else {
-                log.error("Send two way ack failed! Id={}, to remoteAddr={}",
-                        RemotingUtil.parseRemoteAddress(ctx.channel()));
-            }
-        });
     }
 
-    private void processTwoWayResp(final ChannelHandlerContext ctx, Envelope req) {
+    private void processTwoWayAck(Connection connection, Envelope req) {
         RespMsg respMsg;
         try {
             respMsg = deserializeRespMsg(req);
@@ -104,31 +78,26 @@ public class DefaultMsgProcessor implements MsgProcessor {
             respMsg = msgFactory.createTwoWayAck(req, e);
         }
 
-        Connection conn = ctx.channel().attr(Connection.CONNECTION).get();
-        InvokeFuture future = conn.removeInvokeFuture(req.getReqId());
-
+        InvokeFuture future = connection.removeInvokeFuture(req.getReqId());
         if (future != null) {
             future.complete(respMsg);
+            future.cancelTimeout();
         } else {
             log.warn("Can't find InvokeFuture, maybe already timeout, id={}, from={} ",
-                    req.getReqId(), RemotingUtil.parseRemoteAddress(ctx.channel()));
+                    req.getReqId(), RemotingUtil.parseRemoteAddress(connection.getChannel()));
         }
     }
 
-    private void processHeartbeatReq(final ChannelHandlerContext ctx, Envelope req) {
+    private static void processHeartbeatReq(Connection connection, Envelope req) {
         Envelope heartbeatAck= DefaultMsgFactory.getInstance().createHeartbeatAck(req);
-        final long id = req.getReqId();
-        ctx.writeAndFlush(heartbeatAck).addListener((ChannelFuture future) -> {
-            if (future.isSuccess()) {
-                if (log.isDebugEnabled()) {
-                    log.debug("Send heartbeat ack done! Id={}, to remoteAddr={}", id,
-                            RemotingUtil.parseRemoteAddress(ctx.channel()));
-                }
-            } else {
-                log.error("Send heartbeat ack failed! Id={}, to remoteAddr={}", id,
-                        RemotingUtil.parseRemoteAddress(ctx.channel()));
-            }
-        });
+        connection.sendMsg(heartbeatAck);
+    }
+
+    private void sendAckIfNecessary(Connection connection, Envelope message, Object respObj) {
+        if (message.getMsgType() == REQ_TWO_WAY && respObj != null) {
+            RespMsg respMsg = msgFactory.createTwoWayAck(message, respObj);
+            connection.sendMsg(respMsg);
+        }
     }
 
 }

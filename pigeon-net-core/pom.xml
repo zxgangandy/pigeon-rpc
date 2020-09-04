@@ -5,12 +5,12 @@
     <parent>
         <artifactId>pigeon-rpc</artifactId>
         <groupId>io.github.zxgangandy</groupId>
-        <version>1.0.0</version>
+        <version>1.0.1</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>pigeon-rpc-core</artifactId>
-    <version>1.0.0</version>
+    <version>1.0.1</version>
     <properties>
         <protostuff.version>1.7.2</protostuff.version>
     </properties>

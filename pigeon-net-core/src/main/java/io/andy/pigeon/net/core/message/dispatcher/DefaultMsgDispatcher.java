@@ -1,10 +1,11 @@
 package io.andy.pigeon.net.core.message.dispatcher;
 
+import io.andy.pigeon.net.core.connection.Connection;
 import io.andy.pigeon.net.core.message.Envelope;
+import io.andy.pigeon.net.core.message.MsgContext;
 import io.andy.pigeon.net.core.message.processor.DefaultMsgProcessor;
 import io.andy.pigeon.net.core.message.processor.MsgProcessor;
 import io.andy.pigeon.net.core.utils.NamedThreadFactory;
-import io.netty.channel.ChannelHandlerContext;
 
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ExecutorService;
@@ -28,9 +29,9 @@ public class DefaultMsgDispatcher implements MsgDispatcher {
     }
 
     @Override
-    public void dispatch(final ChannelHandlerContext ctx, Envelope msg) {
+    public void dispatch(Connection connection, Envelope msg) {
         executor.execute(()->{
-            msgProcessor.process(ctx, msg);
+            msgProcessor.process(new MsgContext(serverSide, connection), msg);
         });
     }
 }

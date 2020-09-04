@@ -39,7 +39,13 @@ public class NettyMessageHandler extends SimpleChannelInboundHandler<Envelope> {
     @Override
     protected void channelRead0(ChannelHandlerContext ctx, Envelope envelope) throws Exception {
         log.info("Received message={}", envelope);
-        msgDispatcher.dispatch(ctx, envelope);
+
+        Connection connection = ctx.channel().attr(Connection.CONNECTION).get();
+        if (connection == null) {
+            log.error("[BUG]connection is null when read message!");
+            return;
+        }
+        msgDispatcher.dispatch(connection, envelope);
     }
 
     @Override

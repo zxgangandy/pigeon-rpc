@@ -5,7 +5,7 @@
     <parent>
         <artifactId>pigeon-rpc</artifactId>
         <groupId>io.github.zxgangandy</groupId>
-        <version>1.0.0</version>
+        <version>1.0.1</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
@@ -15,7 +15,7 @@
         <dependency>
             <groupId>io.github.zxgangandy</groupId>
             <artifactId>pigeon-rpc-core</artifactId>
-            <version>1.0.RELEASE</version>
+            <version>1.0.1</version>
             <scope>compile</scope>
         </dependency>
     </dependencies>

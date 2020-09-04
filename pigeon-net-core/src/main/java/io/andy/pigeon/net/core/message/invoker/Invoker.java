@@ -1,16 +1,13 @@
 package io.andy.pigeon.net.core.message.invoker;
 
 
+import io.andy.pigeon.net.core.message.MsgContext;
+import io.andy.pigeon.net.core.message.ReqMsg;
+
 /**
+ *  Invoke functions after received peer's message.
  */
-public interface Invoker<T, R> {
+public interface Invoker<R> {
 
-    /**
-     * 远程执行
-     * @param req
-     * @return
-     */
-    R invoke(T req);
-
-
+    R invoke(MsgContext context, ReqMsg req);
 }

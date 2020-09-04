@@ -2,7 +2,9 @@ package io.andy.pigeon.net.core.connection;
 
 import io.andy.pigeon.net.core.Url;
 import io.andy.pigeon.net.core.message.invoker.InvokeFuture;
+import io.andy.pigeon.net.core.utils.RemotingUtil;
 import io.netty.channel.Channel;
+import io.netty.channel.ChannelFuture;
 import io.netty.util.AttributeKey;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
@@ -103,6 +105,61 @@ public class Connection {
      */
     public InvokeFuture removeInvokeFuture(long id) {
         return this.invokeFutureMap.remove(id);
+    }
+
+    /**
+     * Send message to the peer.
+     */
+    public void sendMsg(Object obj) {
+        if (channel == null) {
+            throw new IllegalStateException("Channel should be initialized before sending message!!");
+        }
+
+        channel.writeAndFlush(obj).addListener((ChannelFuture future) -> {
+            if (future.isSuccess()) {
+                if (log.isDebugEnabled()) {
+                    log.debug("Send message done! , to remoteAddr={}",
+                            RemotingUtil.parseRemoteAddress(channel));
+                }
+            } else {
+                log.error("Send message failed! Id={}, to remoteAddr={}",
+                        RemotingUtil.parseRemoteAddress(channel));
+            }
+        });
+    }
+
+    /**
+     * Send message to the peer.
+     */
+    public void sendMsg(Object obj, SendMsgCallback callback) {
+        if (channel == null) {
+            throw new IllegalStateException("Channel should be initialized before sending message!!");
+        }
+
+        channel.writeAndFlush(obj).addListener((ChannelFuture future) -> {
+            if (future.isSuccess()) {
+                if (callback != null) {
+                    callback.onSuccess();
+                }
+                if (log.isDebugEnabled()) {
+                    log.debug("Send message done! , to remoteAddr={}",
+                            RemotingUtil.parseRemoteAddress(channel));
+                }
+            } else {
+                if (callback != null) {
+                    callback.onFailed(future.cause());
+                }
+                log.error("Send message failed! Id={}, to remoteAddr={}",
+                        RemotingUtil.parseRemoteAddress(channel));
+            }
+        });
+    }
+
+
+    public interface SendMsgCallback {
+        void onSuccess();
+
+        void onFailed(Throwable throwable);
     }
 
 }

@@ -2,7 +2,9 @@ package io.andy.pigeon.net.core.client;
 
 import io.andy.pigeon.net.core.config.Option;
 import io.andy.pigeon.net.core.message.RespMsg;
+import io.andy.pigeon.net.core.message.invoker.DefaultInvokerMgr;
 import io.andy.pigeon.net.core.message.invoker.InvokeFuture;
+import io.andy.pigeon.net.core.message.invoker.Invoker;
 import io.netty.util.internal.ObjectUtil;
 import lombok.extern.slf4j.Slf4j;
 
@@ -34,6 +36,11 @@ public class NettyClient extends AbstractClientEndpoint {
     public <T> NettyClient config(Option<T> option, T value) {
         ObjectUtil.checkNotNull(option, "option");
         this.options.option(option, value);
+        return this;
+    }
+
+    public NettyClient invoker(Invoker invoker) {
+        DefaultInvokerMgr.getInstance().setInvoker(invoker);
         return this;
     }
 

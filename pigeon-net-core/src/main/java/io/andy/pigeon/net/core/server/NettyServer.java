@@ -3,6 +3,8 @@ package io.andy.pigeon.net.core.server;
 import io.andy.pigeon.net.core.config.Option;
 import io.andy.pigeon.net.core.connection.Connection;
 import io.andy.pigeon.net.core.Url;
+import io.andy.pigeon.net.core.message.invoker.DefaultInvokerMgr;
+import io.andy.pigeon.net.core.message.invoker.Invoker;
 import io.netty.util.internal.ObjectUtil;
 import lombok.extern.slf4j.Slf4j;
 
@@ -14,6 +16,11 @@ public class NettyServer extends AbstractServerEndpoint {
     public <T> NettyServer config(Option<T> option, T value) {
         ObjectUtil.checkNotNull(option, "option");
         this.options.option(option, value);
+        return this;
+    }
+
+    public NettyServer invoker(Invoker invoker) {
+        DefaultInvokerMgr.getInstance().setInvoker(invoker);
         return this;
     }
 

@@ -7,12 +7,10 @@ public class DefaultInvokerMgr implements InvokerMgr{
 
     public static volatile DefaultInvokerMgr INSTANCE;
 
-    private Invoker oneWayInvoker;
-
-    private Invoker twoWayInvoker;
+    private Invoker invoker;
 
     public static DefaultInvokerMgr getInstance() {
-        if ( null == INSTANCE) {
+        if (null == INSTANCE) {
             synchronized (DefaultInvokerMgr.class) {
                 if (null == INSTANCE) {
                     INSTANCE = new DefaultInvokerMgr();
@@ -23,15 +21,10 @@ public class DefaultInvokerMgr implements InvokerMgr{
         return INSTANCE;
     }
 
-
     @Override
-    public Invoker getOneWayInvoker() {
-        return oneWayInvoker == null ? getDefaultOneWayInvoker() : oneWayInvoker;
+    public Invoker getInvoker() {
+        return invoker;
     }
 
-    @Override
-    public Invoker getTwoWayInvoker() {
-        return twoWayInvoker == null ? getDefaultTwoWayInvoker() : twoWayInvoker;
-    }
 
 }
