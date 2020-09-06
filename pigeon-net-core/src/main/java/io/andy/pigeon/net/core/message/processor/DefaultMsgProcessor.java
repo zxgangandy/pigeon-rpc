@@ -20,7 +20,7 @@ public class DefaultMsgProcessor implements MsgProcessor {
     public DefaultMsgProcessor() {
         this.invoker = DefaultInvokerMgr.getInstance().getInvoker();
 
-        Objects.requireNonNull(invoker, "Invoker not initialized");
+        Objects.requireNonNull(invoker, "Invoker not be initialized");
 
         this.msgFactory = DefaultMsgFactory.getInstance();
     }
@@ -88,8 +88,8 @@ public class DefaultMsgProcessor implements MsgProcessor {
         }
     }
 
-    private static void processHeartbeatReq(Connection connection, Envelope req) {
-        Envelope heartbeatAck= DefaultMsgFactory.getInstance().createHeartbeatAck(req);
+    private void processHeartbeatReq(Connection connection, Envelope req) {
+        Envelope heartbeatAck= msgFactory.createHeartbeatAck(req);
         connection.sendMsg(heartbeatAck);
     }
 
