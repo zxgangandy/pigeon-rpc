@@ -5,7 +5,7 @@ import lombok.Setter;
 @Setter
 public class DefaultInvokerMgr implements InvokerMgr{
 
-    public static volatile DefaultInvokerMgr INSTANCE;
+    private static volatile DefaultInvokerMgr INSTANCE;
 
     private Invoker invoker;
 

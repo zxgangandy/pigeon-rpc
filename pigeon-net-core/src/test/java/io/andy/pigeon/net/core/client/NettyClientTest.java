@@ -41,7 +41,8 @@ public class NettyClientTest {
                 .serverPort(8500)
                 .config(CONNECT_TIMEOUT, 3000)
                 .start()
-                .oneWayRequest("hello");
+                .invoker(new DefaultInvoker())
+                .twoWayRequest("hello");
 
 
         try {

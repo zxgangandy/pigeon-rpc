@@ -8,7 +8,7 @@ public interface MsgProcessor {
 
     void process(MsgContext context, Envelope req);
 
-    default ReqMsg deserializeReqMsg(Envelope req) throws Throwable {
+    default ReqMsg deserializeReqBody(Envelope req) throws Throwable {
         MsgEnvelope envelope = (MsgEnvelope) req;
         ReqMsg reqMsg = new ReqMsg(null);
         BeanUtils.copyProperties(envelope ,reqMsg);
@@ -22,7 +22,7 @@ public interface MsgProcessor {
         return reqMsg;
     }
 
-    default RespMsg deserializeRespMsg(Envelope req) throws Throwable {
+    default RespMsg deserializeRespBody(Envelope req) throws Throwable {
         MsgEnvelope envelope = (MsgEnvelope) req;
         RespMsg respMsg = new RespMsg(null);
         BeanUtils.copyProperties(envelope , respMsg);
@@ -37,11 +37,11 @@ public interface MsgProcessor {
     }
 
     static Class<?> getClazzType(Envelope req) throws Throwable {
-        Class<?> classType = null;
+        Class<?> classType;
         try {
             classType = Class.forName(req.getClazzStr());
         } catch (ClassNotFoundException e) {
-            throw new Throwable("Deserialize message failed!");
+            throw new Throwable("Deserialize message body failed!");
         }
         return classType;
     }

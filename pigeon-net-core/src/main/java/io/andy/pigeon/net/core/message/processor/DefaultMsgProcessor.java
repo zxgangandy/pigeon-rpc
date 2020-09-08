@@ -55,7 +55,7 @@ public class DefaultMsgProcessor implements MsgProcessor {
         ReqMsg reqMsg;
         Connection connection = context.getConnection();
         try {
-            reqMsg = deserializeReqMsg(message);
+            reqMsg = deserializeReqBody(message);
         } catch (Throwable th) {
             sendAckIfNecessary(connection, message, th);
             return;
@@ -72,7 +72,7 @@ public class DefaultMsgProcessor implements MsgProcessor {
     private void processTwoWayAck(Connection connection, Envelope req) {
         RespMsg respMsg;
         try {
-            respMsg = deserializeRespMsg(req);
+            respMsg = deserializeRespBody(req);
         } catch (Throwable e) {
             e.printStackTrace();
             respMsg = msgFactory.createTwoWayAck(req, e);

@@ -127,18 +127,18 @@ public abstract class AbstractRemotingEndpoint implements RemotingEndpoint {
         return respMsg;
     }
 
-    protected RespMsg sendSyncMsg(Url url, Object request)  throws InterruptedException{
+    protected RespMsg sendSyncMsg(Url url, Object request) throws InterruptedException{
         Connection conn = connectionMgr.get(url);
         return sendSyncMsg(conn, request);
     }
 
-    protected InvokeFuture sendAsyncMsg(Url url, Object request, int timeoutMillis)  throws InterruptedException{
+    protected InvokeFuture sendAsyncMsg(Url url, Object request, int timeoutMillis){
         Connection conn = connectionMgr.get(url);
         return sendAsyncMsg(conn, request, timeoutMillis);
     }
 
 
-    public InvokeFuture sendAsyncMsg(Connection conn, Object request, int timeoutMillis)  throws InterruptedException{
+    public InvokeFuture sendAsyncMsg(Connection conn, Object request, int timeoutMillis)  {
         Envelope envelope = msgFactory.createTwoWay(request);
         final long requestId = envelope.getReqId();
         final InvokeFuture future = new DefaultInvokeFuture(requestId);
