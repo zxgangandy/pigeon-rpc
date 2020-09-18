@@ -49,7 +49,7 @@ public class DefaultMsgProcessor implements MsgProcessor {
 
 
     /**
-     *  process request message（including one,two way request）
+     * Process request message（including one,two way request）
      */
     private void processReqMessage(MsgContext context, Envelope message) {
         ReqMsg reqMsg;
@@ -61,6 +61,7 @@ public class DefaultMsgProcessor implements MsgProcessor {
             return;
         }
 
+        Objects.requireNonNull(invoker, "Invoker not implemented");
         try {
             Object respObj = invoker.invoke(context, reqMsg);
             sendAckIfNecessary(connection, message, respObj);
@@ -69,6 +70,9 @@ public class DefaultMsgProcessor implements MsgProcessor {
         }
     }
 
+    /**
+     * Process tow way ack message
+     */
     private void processTwoWayAck(Connection connection, Envelope req) {
         RespMsg respMsg;
         try {
@@ -88,11 +92,17 @@ public class DefaultMsgProcessor implements MsgProcessor {
         }
     }
 
+    /**
+     * Process heartbeat request message
+     */
     private void processHeartbeatReq(Connection connection, Envelope req) {
         Envelope heartbeatAck= msgFactory.createHeartbeatAck(req);
         connection.sendMsg(heartbeatAck);
     }
 
+    /**
+     * Send two way ack message if necessary
+     */
     private void sendAckIfNecessary(Connection connection, Envelope message, Object respObj) {
         if (message.getMsgType() == REQ_TWO_WAY && respObj != null) {
             RespMsg respMsg = msgFactory.createTwoWayAck(message, respObj);
