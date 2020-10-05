@@ -107,6 +107,8 @@ public abstract class AbstractClientEndpoint extends AbstractRemotingEndpoint {
     protected void checkServerUrl() {
         if (StringUtils.isNotEmpty(this.serverIp) && this.serverPort > 0) {
             serverUrl = new Url(serverIp, serverPort);
+        } else {
+            throw new IllegalArgumentException("Server ip is empty or server port is invalid");
         }
     }
 
