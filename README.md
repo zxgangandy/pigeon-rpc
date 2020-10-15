@@ -1,6 +1,10 @@
 # pigeon-rpc
 pigeon-rpc
 
+[![AUR](https://img.shields.io/badge/license-Apache%20License%202.0-blue.svg)](https://github.com/zxgangandy/pigeon-rpc/blob/master/LICENSE)
+[![](https://img.shields.io/badge/Author-zxgangandy-orange.svg)](https://github.com/zxgangandy/pigeon-rpc)
+[![](https://img.shields.io/badge/version-1.0.2-brightgreen.svg)](https://github.com/zxgangandy/pigeon-rpc)
+
 pigeon-rpc是一款基于Netty的可以支持百万级别的并发连接的高性能、高度可扩展的的网络通讯框架，主要参考了sofa-bolt的网络通讯模块的设计，
 pigeon-rpc可以使用在IM、长连接等领域，也可以在其基础上开发rpc框架。它具有以下的特性：
 - simple design
