@@ -1,6 +1,7 @@
 package io.andy.pigeon.net.core.connection;
 
 import io.andy.pigeon.net.core.Url;
+import io.andy.pigeon.net.core.exception.WriteException;
 import io.andy.pigeon.net.core.message.invoker.InvokeFuture;
 import io.andy.pigeon.net.core.utils.RemotingUtil;
 import io.netty.channel.Channel;
@@ -111,9 +112,7 @@ public class Connection {
      * Send message to the peer.
      */
     public void sendMsg(Object obj) {
-        if (channel == null) {
-            throw new IllegalStateException("Channel should be initialized before sending message!!");
-        }
+        validateChannel();
 
         channel.writeAndFlush(obj).addListener((ChannelFuture future) -> {
             if (future.isSuccess()) {
@@ -132,9 +131,7 @@ public class Connection {
      * Send message to the peer.
      */
     public void sendMsg(Object obj, SendMsgCallback callback) {
-        if (channel == null) {
-            throw new IllegalStateException("Channel should be initialized before sending message!!");
-        }
+        validateChannel();
 
         channel.writeAndFlush(obj).addListener((ChannelFuture future) -> {
             if (future.isSuccess()) {
@@ -153,6 +150,17 @@ public class Connection {
                         RemotingUtil.parseRemoteAddress(channel));
             }
         });
+    }
+
+    private void validateChannel() {
+        if (channel == null) {
+            throw new IllegalStateException("Channel should be initialized before sending message!!");
+        }
+
+        if (!isWritable()) {
+            log.error("The connection {} write overflow !!!", this);
+            throw new WriteException("The connection " + this + "write overflow !!!");
+        }
     }
 
 
